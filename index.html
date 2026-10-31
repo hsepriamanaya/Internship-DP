@@ -304,7 +304,7 @@ data(){
 /* ===== aksi umum ===== */
 const F=(l,n,v='',t='text',x='')=>`<label>${l}<input name="${n}" type="${t}" value="${esc(v)}" ${x}></label>`;
 const obj=f=>Object.fromEntries(new FormData(f));
-function close(){$('#dlg').close();$('#dlg').className=''}
+function closeDlg(){$('#dlg').close();$('#dlg').className=''}
 function fq(q){q=q.toLowerCase();document.querySelectorAll('tr[data-s]').forEach(r=>r.hidden=!r.dataset.s.includes(q))}
 function xl(k){const m={peserta:()=>D.P.map(({_r,...r})=>r),abs:()=>D.A.map(a=>({Nama:nm(a.PesertaID),Tanggal:a.Tanggal,Masuk:a.Masuk,Pulang:a.Keluar})),log:()=>D.L.map(l=>({Nama:nm(l.PesertaID),Tanggal:l.Tanggal,Aktivitas:l.Aktivitas,Output:l.Output,Status:l.Status,Catatan:l.Catatan}))};
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(m[k]()),k);XLSX.writeFile(wb,`${k}_${todayStr()}.xlsx`)}
@@ -319,19 +319,19 @@ async function openP(id){
   ${F('Tanggal mulai','Mulai',p.Mulai,'date','required')}${F('Tanggal selesai','Selesai',p.Selesai,'date','required')}</div>
   <label>Pembimbing<select name="Pembimbing" required><option value="">Pilih pembimbing</option>${M.map(m=>`<option ${m===p.Pembimbing?'selected':''}>${esc(m)}</option>`).join('')}</select></label>
   ${id?'':F('Username login peserta','Username','','text','required placeholder="sandi awal sesuai Pengaturan"')}
-  <div class="acts">${id?`<button type="button" class="btn red" onclick="delP('${id}')" style="margin-right:auto">Hapus</button>`:''}<button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
-async function saveP(e){e.preventDefault();try{await api('savePeserta',{data:obj(e.target)});close();toast('Data peserta tersimpan');go('peserta')}catch(x){toast(x.message)}}
-async function delP(id){if(!confirm('Hapus peserta ini? Akun loginnya dinonaktifkan.'))return;try{await api('hapusPeserta',{id});close();go('peserta')}catch(x){toast(x.message)}}
+  <div class="acts">${id?`<button type="button" class="btn red" onclick="delP('${id}')" style="margin-right:auto">Hapus</button>`:''}<button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
+async function saveP(e){e.preventDefault();try{await api('savePeserta',{data:obj(e.target)});closeDlg();toast('Data peserta tersimpan');go('peserta')}catch(x){toast(x.message)}}
+async function delP(id){if(!confirm('Hapus peserta ini? Akun loginnya dinonaktifkan.'))return;try{await api('hapusPeserta',{id});closeDlg();go('peserta')}catch(x){toast(x.message)}}
 async function openN(id){const p=D.P.find(x=>x.ID===id);let old={};
   try{const r=(await api('penilaian')).find(x=>x.PesertaID===id);if(r)old={...JSON.parse(r.Nilai),Catatan:r.Catatan}}catch(e){}
   $('#dlg').innerHTML=`<h3>Penilaian - ${esc(p.Nama)}</h3><form onsubmit="saveN(event,'${id}')"><div class="two">
   ${C.aspek.split(',').map(k=>k.trim()).filter(Boolean).map(k=>F(k+' (0-100)','n_'+k,old[k],'number','min=0 max=100 required')).join('')}</div>
   <label>Catatan pembimbing<textarea name="Catatan" rows="2">${esc(old.Catatan)}</textarea></label>
-  <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn ghost" name="m" value="simpan">Simpan nilai</button><button class="btn amber" name="m" value="selesai">Simpan dan nyatakan selesai</button></div></form>`;$('#dlg').showModal()}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn ghost" name="m" value="simpan">Simpan nilai</button><button class="btn amber" name="m" value="selesai">Simpan dan nyatakan selesai</button></div></form>`;$('#dlg').showModal()}
 async function saveN(e,id){e.preventDefault();const m=e.submitter.value,o=obj(e.target),Nilai={};
   Object.keys(o).filter(k=>k.startsWith('n_')).forEach(k=>Nilai[k.slice(2)]=o[k]);
   if(m==='selesai'&&!confirm('Nyatakan magang selesai? Sertifikat akan terbit dan tidak bisa dibatalkan.'))return;
-  try{await api('saveNilai',{id,data:{Nilai,Catatan:o.Catatan}});if(m==='selesai'){await api('selesaikan',{id});toast('Magang selesai, sertifikat terbit')}else toast('Nilai tersimpan');close();go('peserta')}catch(x){toast(x.message)}}
+  try{await api('saveNilai',{id,data:{Nilai,Catatan:o.Catatan}});if(m==='selesai'){await api('selesaikan',{id});toast('Magang selesai, sertifikat terbit')}else toast('Nilai tersimpan');closeDlg();go('peserta')}catch(x){toast(x.message)}}
 
 /* ===== absen, logbook, sandi ===== */
 async function absen(){try{toast(await api('absen'));go('abs')}catch(x){toast(x.message)}}
@@ -341,8 +341,8 @@ async function saveLog(e){e.preventDefault();const o=obj(e.target),f=e.target.fi
 async function rev(id,status){let catatan='';if(status==='Revisi'){catatan=prompt('Apa yang perlu direvisi?');if(!catatan)return}
   try{await api('reviewLogbook',{id,status,catatan});toast('Logbook '+status.toLowerCase());go('log')}catch(x){toast(x.message)}}
 function pwd(){$('#dlg').innerHTML=`<h3>Ganti kata sandi</h3><form onsubmit="savePwd(event)">${F('Sandi lama','lama','','password','required')}${F('Sandi baru (min. 6 karakter)','baru','','password','required minlength=6')}
-  <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
-async function savePwd(e){e.preventDefault();try{await api('password',obj(e.target));close();toast('Kata sandi diganti')}catch(x){toast(x.message)}}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
+async function savePwd(e){e.preventDefault();try{await api('password',obj(e.target));closeDlg();toast('Kata sandi diganti')}catch(x){toast(x.message)}}
 
 /* ===== akun (admin) ===== */
 function openU(){
@@ -350,8 +350,8 @@ function openU(){
   <label>Peran<select name="Role"><option value="mentor">Pembimbing</option><option value="admin">Admin</option><option value="peserta">Peserta</option></select></label>
   <label>Untuk peserta (jika peran Peserta)<select name="PesertaID"><option value="">-</option>${D.P.map(p=>`<option value="${p.ID}">${esc(p.Nama)}</option>`).join('')}</select></label></div>
   ${F('Kata sandi (kosongkan = sandi awal)','Password')}
-  <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
-async function saveU(e){e.preventDefault();try{await api('saveUser',{data:obj(e.target)});close();toast('Akun dibuat');go('users')}catch(x){toast(x.message)}}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
+async function saveU(e){e.preventDefault();try{await api('saveUser',{data:obj(e.target)});closeDlg();toast('Akun dibuat');go('users')}catch(x){toast(x.message)}}
 async function tog(u){try{await api('toggleUser',{username:u});go('users')}catch(x){toast(x.message)}}
 async function resetP(u){if(!confirm('Reset sandi '+u+' ke sandi awal?'))return;try{toast('Sandi diatur ke: '+await api('resetPass',{username:u}))}catch(x){toast(x.message)}}
 
@@ -364,7 +364,7 @@ function clrImg(k){document.querySelector(`#sf [name=${k}]`).value='';$('#pv_'+k
 async function saveSet(e){e.preventDefault();try{await api('saveConfig',{data:obj(e.target)});C=await api('config');await theme();toast('Pengaturan tersimpan')}catch(x){toast(x.message)}}
 async function prevCert(){
   const cf={...C,...obj($('#sf'))},p={Nama:'Nama Peserta Contoh',Instansi:'Universitas Contoh',Jurusan:'Teknik Industri',Divisi:'Operasional',Pembimbing:'Pembimbing Contoh',Mulai:'2026-01-05',Selesai:'2026-04-05',NilaiAkhir:'88',NoSertifikat:'001/SERT-PKL/XI/2026',TglSertifikat:todayStr()};
-  try{const d=await mkCert(p,cf);$('#dlg').className='wide';$('#dlg').innerHTML=`<h3>Pratinjau sertifikat</h3><iframe src="${d.output('bloburl')}" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px"></iframe><div class="acts" style="margin-top:12px"><button class="btn" onclick="close()">Tutup</button></div>`;$('#dlg').showModal()}catch(x){toast(x.message)}}
+  try{const d=await mkCert(p,cf);$('#dlg').className='wide';$('#dlg').innerHTML=`<h3>Pratinjau sertifikat</h3><iframe src="${d.output('bloburl')}" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px"></iframe><div class="acts" style="margin-top:12px"><button class="btn" onclick="closeDlg()">Tutup</button></div>`;$('#dlg').showModal()}catch(x){toast(x.message)}}
 
 /* ===== migrasi data ===== */
 async function expAll(){try{const o=await api('exportAll'),wb=XLSX.utils.book_new();Object.keys(o).forEach(n=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(o[n]),n));XLSX.writeFile(wb,`Cadangan_Portal_Magang_${todayStr()}.xlsx`)}catch(x){toast(x.message)}}
