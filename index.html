@@ -137,7 +137,7 @@ dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-
 const API='https://script.google.com/macros/s/AKfycbwZvaxtuKHJzt-cajOvBqQWRCcsikmvGQPiO05f4Y9XNtLXVHkyu7OqDZosIHcPlX-vmg/exec';
 /* Nama perusahaan, logo, warna, sertifikat, dll. diubah dari menu Pengaturan setelah login sebagai admin. */
 const $=s=>document.querySelector(s),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let S=JSON.parse(localStorage.getItem('sess')||'null'),D={},C={},V='dash',AC={};
+let S=JSON.parse(sessionStorage.getItem('sess')||'null'),D={},C={},V='dash',AC={};
 const staff=()=>S.role!=='peserta',isAdmin=()=>S.role==='admin';
 const fmt=d=>d?new Date(d+'T00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'-';
 const todayStr=()=>new Date().toLocaleDateString('sv-SE');
@@ -164,7 +164,7 @@ async function api(a,d={}){
   finally{busy(false)}}
 const AS={};async function asset(id){return AS[id]||(AS[id]=await api('asset',{id}))}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000)}
-function out(){localStorage.removeItem('sess');sessionStorage.clear();location.reload()}
+function out(){sessionStorage.removeItem('sess');sessionStorage.clear();location.reload()}
 
 /* ===== tema & identitas dari Pengaturan ===== */
 async function theme(){
@@ -188,7 +188,7 @@ async function verify(no){
   catch(x){$('#vres').innerHTML=`<div class="panel"><span class="b off">Tidak valid</span><p style="margin-top:10px">${esc(x.message)}</p></div>`}}
 
 $('#lf').onsubmit=async e=>{e.preventDefault();const b=$('#lb');b.disabled=true;b.textContent='Memeriksa...';$('#le').textContent='';
-  try{S=await api('login',{username:$('#u').value.trim(),password:$('#pw').value});localStorage.setItem('sess',JSON.stringify(S));C=await api('config');theme();boot()}
+  try{S=await api('login',{username:$('#u').value.trim(),password:$('#pw').value});sessionStorage.setItem('sess',JSON.stringify(S));C=await api('config');theme();boot()}
   catch(x){$('#le').textContent=x.message}
   b.disabled=false;b.textContent='Masuk'};
 
@@ -225,7 +225,7 @@ dash(){
   const p=D.P[0];if(!p)return '<p class="empty">Data peserta tidak ditemukan.</p>';
   const ok=D.L.filter(l=>l.Status==='Disetujui').length;
   return head('Dashboard',`Selamat datang, ${esc(p.Nama)}.`)+
-  (p.Status==='Selesai'?`<div class="banner"><div><b>Selamat, magang Anda dinyatakan selesai.</b><br>Sertifikat sudah tersedia.</div><button class="btn amber" onclick="go('cert')">Buka sertifikat</button></div>`:'')+
+  (D.L.some(l=>l.Status==='Revisi')?`<div class="banner"><div><b>${D.L.filter(l=>l.Status==='Revisi').length} logbook perlu diperbaiki.</b><br>Pembimbing meninggalkan catatan revisi.</div><button class="btn amber" onclick="go('log')">Buka logbook</button></div>`:'')+(p.Status==='Selesai'?`<div class="banner"><div><b>Selamat, magang Anda dinyatakan selesai.</b><br>Sertifikat sudah tersedia.</div><button class="btn amber" onclick="go('cert')">Buka sertifikat</button></div>`:'')+
   `<div class="grid">${stat(pct(p)+'%','Progres magang','hi')}${stat(D.A.length,'Hari hadir')}${stat(ok+'/'+D.L.length,'Logbook disetujui')}${stat(badge(p.Status),'Status')}</div>
   <div class="panel"><h3>Program Anda</h3><div class="two" style="margin-top:10px"><p><span class="s">Divisi</span>${esc(p.Divisi)}</p><p><span class="s">Pembimbing</span>${esc(p.Pembimbing)}</p><p><span class="s">Mulai</span>${fmt(p.Mulai)}</p><p><span class="s">Selesai</span>${fmt(p.Selesai)}</p></div></div>`},
 
@@ -267,9 +267,9 @@ log(){
   <label>Aktivitas<textarea name="Aktivitas" rows="3" required placeholder="Apa yang Anda kerjakan hari ini?"></textarea></label>
   <div class="two"><label>Hasil / output<input name="Output" placeholder="Contoh: laporan inspeksi 3 area"></label><label>Foto / bukti (opsional)<input type="file" name="file" accept="image/*"></label></div>
   <button class="btn">Kirim logbook</button></form></div>`:'')+
-  `<div class="panel"><div class="tw"><table><tr>${staff()?'<th>Peserta</th>':''}<th>Tanggal</th><th>Aktivitas</th><th>Status</th>${staff()?'<th></th>':''}</tr>
+  `<div class="panel"><div class="tw"><table><tr>${staff()?'<th>Peserta</th>':''}<th>Tanggal</th><th>Aktivitas</th><th>Status</th><th></th></tr>
   ${L.map(l=>`<tr>${staff()?`<td>${esc(nm(l.PesertaID))}</td>`:''}<td style="white-space:nowrap">${fmt(l.Tanggal)}</td><td>${esc(l.Aktivitas)}<small>Output: ${esc(l.Output)||'-'}</small>${lamp(l.Lampiran)}${l.Catatan?`<small style="color:var(--red)">Catatan: ${esc(l.Catatan)}</small>`:''}</td><td>${badge(l.Status)}</td>
-  ${staff()?`<td style="white-space:nowrap">${l.Status!=='Disetujui'?`<button class="btn sm" onclick="rev('${l.ID}','Disetujui')">Setujui</button> `:''}<button class="btn red sm" onclick="rev('${l.ID}','Revisi')">Revisi</button></td>`:''}</tr>`).join('')||'<tr><td colspan=5 class="empty">Belum ada logbook.</td></tr>'}</table></div></div>`},
+  ${staff()?`<td style="white-space:nowrap">${l.Status!=='Disetujui'?`<button class="btn sm" onclick="rev('${l.ID}','Disetujui')">Setujui</button> `:''}<button class="btn red sm" onclick="rev('${l.ID}','Revisi')">Revisi</button></td>`:(l.Status==='Revisi'||l.Status==='Menunggu'?`<td><button class="btn ${l.Status==='Revisi'?'amber':'ghost'} sm" onclick="openLog('${l.ID}')">${l.Status==='Revisi'?'Perbaiki':'Ubah'}</button></td>`:'<td></td>')}</tr>`).join('')||'<tr><td colspan=5 class="empty">Belum ada logbook.</td></tr>'}</table></div></div>`},
 
 cert(){
   const p=D.P[0];
@@ -401,6 +401,16 @@ async function absen(){try{toast(await api('absen'));go('abs')}catch(x){toast(x.
 async function saveLog(e){e.preventDefault();const o=obj(e.target),f=e.target.file.files[0];delete o.file;
   try{if(f){toast('Mengunggah foto...');o.Lampiran=await api('upload',{data:await rs(f,1200,'image/jpeg'),name:'logbook.jpg'})}
   await api('saveLogbook',{data:o});toast('Logbook terkirim');go('log')}catch(x){toast(x.message)}}
+function openLog(id){const l=D.L.find(x=>x.ID===id);
+  $('#dlg').innerHTML=`<h3>${l.Status==='Revisi'?'Perbaiki':'Ubah'} logbook</h3>${l.Catatan?`<p style="background:#fee2e2;color:var(--red);padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px"><b>Catatan pembimbing:</b> ${esc(l.Catatan)}</p>`:''}
+  <form onsubmit="saveEditLog(event,'${id}')">${F('Tanggal','Tanggal',l.Tanggal,'date','required')}
+  <label>Aktivitas<textarea name="Aktivitas" rows="4" required>${esc(l.Aktivitas)}</textarea></label>
+  <div class="two"><label>Hasil / output<input name="Output" value="${esc(l.Output)}"></label><label>Ganti foto / bukti (opsional)<input type="file" name="file" accept="image/*"></label></div>
+  ${l.Lampiran?'<p class="s" style="margin:-4px 0 10px">Foto sebelumnya tetap dipakai jika tidak diganti.</p>':''}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Kirim ulang</button></div></form>`;$('#dlg').showModal()}
+async function saveEditLog(e,id){e.preventDefault();const o=obj(e.target),f=e.target.file.files[0];delete o.file;
+  try{if(f){toast('Mengunggah foto...');o.Lampiran=await api('upload',{data:await rs(f,1200,'image/jpeg'),name:'logbook.jpg'})}
+  await api('editLogbook',{id,data:o});closeDlg();toast('Logbook dikirim ulang untuk ditinjau');go('log')}catch(x){toast(x.message)}}
 async function rev(id,status){let catatan='';if(status==='Revisi'){catatan=prompt('Apa yang perlu direvisi?');if(!catatan)return}
   try{await api('reviewLogbook',{id,status,catatan});toast('Logbook '+status.toLowerCase());go('log')}catch(x){toast(x.message)}}
 function pwd(){$('#dlg').innerHTML=`<h3>Ganti kata sandi</h3><form onsubmit="savePwd(event)">${F('Sandi lama','lama','','password','required')}${F('Sandi baru (min. 6 karakter)','baru','','password','required minlength=6')}
