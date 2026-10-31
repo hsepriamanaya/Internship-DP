@@ -6,72 +6,76 @@
 <title>Portal Magang</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--ink:#10243a;--teal:#0f766e;--teal2:#14b8a6;--amber:#f59e0b;--bg:#f2f5f8;--card:#fff;--mute:#64748b;--line:#e2e8f0;--red:#dc2626;--r:14px}
+:root{--ink:#10243a;--teal:#0f766e;--amber:#f59e0b;--teal2:color-mix(in srgb,var(--teal) 65%,#fff);--bg:#f2f5f8;--card:#fff;--mute:#64748b;--line:#e2e8f0;--red:#dc2626;--r:14px}
 *{box-sizing:border-box;margin:0}
-body{font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+body{font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:#10243a}
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--teal2);outline-offset:2px}
-/* login */
-#login{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
-.hero{background:linear-gradient(155deg,#0b1d2f,#0f766e);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between}
+.lg{height:38px;max-width:130px;object-fit:contain;margin-right:10px;border-radius:6px}
+.brand{display:flex;align-items:center;color:#fff;font-weight:800;font-size:18px;line-height:1.2}
+.brand small{display:block;color:var(--teal2);font-weight:500;font-size:12px}
+#login,#ver{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+.hero{background:linear-gradient(155deg,var(--ink),var(--teal));color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between;gap:30px}
 .hero h1{font-size:40px;line-height:1.15;font-weight:800;max-width:460px}
-.hero p{color:#b7d9d4;max-width:420px;margin-top:14px}
+.hero p{color:#ffffffb8;max-width:420px;margin-top:14px}
 .steps{display:flex;gap:10px;flex-wrap:wrap}
-.steps span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:99px;font-size:13px}
+.steps span{background:#ffffff1a;border:1px solid #ffffff2e;padding:6px 14px;border-radius:99px;font-size:13px}
 .lbox{display:grid;place-items:center;padding:32px}
-.lbox form{width:100%;max-width:370px}
-.lbox h2{font-size:26px;font-weight:800}
-.lbox .sub{color:var(--mute);margin:4px 0 22px}
+.lbox form,.lbox .vbox{width:100%;max-width:400px}
+.lbox h2{font-size:26px;font-weight:800}.lbox .sub{color:var(--mute);margin:4px 0 22px}
 label{display:block;font-weight:600;font-size:13px;margin-bottom:12px}
 input,select,textarea{display:block;width:100%;margin-top:5px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-input:focus,select:focus,textarea:focus{border-color:var(--teal2);outline:none;box-shadow:0 0 0 3px #14b8a633}
+input[type=color]{padding:2px;height:40px}input[type=file]{padding:7px;font-size:13px}
+input:focus,select:focus,textarea:focus{border-color:var(--teal2);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 20%,transparent)}
 .btn{background:var(--teal);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer}
-.btn:hover{background:#0d5f59}.btn:disabled{opacity:.6}
-.btn.ghost{background:#e6f4f2;color:var(--teal)}.btn.sm{padding:6px 12px;font-size:13px}.btn.amber{background:var(--amber);color:#3b2400}
-.btn.red{background:#fee2e2;color:var(--red)}.full{width:100%}
+.btn:hover{background:color-mix(in srgb,var(--teal) 85%,#000)}.btn:disabled{opacity:.6}
+.btn.ghost{background:color-mix(in srgb,var(--teal) 12%,#fff);color:var(--teal)}.btn.sm{padding:6px 12px;font-size:13px}
+.btn.amber{background:var(--amber);color:#2b1a00}.btn.red{background:#fee2e2;color:var(--red)}.full{width:100%}
 .err{color:var(--red);font-size:13px;min-height:20px;margin-top:8px}
-/* app */
-#app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-aside{background:var(--ink);color:#cbd5e1;padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
-.brand{color:#fff;font-weight:800;font-size:18px;padding:0 10px 22px}
-.brand small{display:block;color:var(--teal2);font-weight:500;font-size:12px}
+#app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--ink);color:#cbd5e1;padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto}
+aside .brand{padding:0 10px 22px}
 nav button{display:block;width:100%;text-align:left;background:none;border:0;color:inherit;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;margin-bottom:2px}
 nav button:hover{background:#ffffff12}nav button.on{background:var(--teal);color:#fff}
+nav hr{border:0;border-top:1px solid #ffffff1f;margin:10px 0}
 .me{margin-top:auto;border-top:1px solid #ffffff1f;padding:14px 10px 0;font-size:13px}
 .me b{color:#fff;display:block}.me a{color:var(--teal2);cursor:pointer;margin-right:12px}
-main{padding:32px 36px;max-width:1150px;width:100%}
+main{padding:32px 36px;max-width:1180px;width:100%}
 h1.t{font-size:26px;font-weight:800}.lead{color:var(--mute);margin:2px 0 22px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
 .stat{background:var(--card);border-radius:var(--r);padding:18px 20px;border:1px solid var(--line)}
 .stat b{font-size:32px;font-weight:800;display:block;line-height:1.1}.stat span{color:var(--mute);font-size:13px}
-.stat.hi{background:var(--ink);color:#fff;border:0}.stat.hi span{color:#9fc7c1}
+.stat.hi{background:var(--ink);color:#fff;border:0}.stat.hi span{color:#ffffffa8}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:20px}
-.panel h3{font-size:16px;margin-bottom:12px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.panel h3{font-size:16px;margin-bottom:4px}.panel .hint{color:var(--mute);font-size:13px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.row input{margin:0;max-width:260px}
 .tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;color:var(--mute);font-weight:600;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:11px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}tr:last-child td{border:0}
-td small{color:var(--mute);display:block}
+td small,.s{color:var(--mute);display:block;font-size:12.5px}
 .b{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
-.b.Aktif,.b.Menunggu{background:#fef3c7;color:#92400e}.b.Selesai,.b.Disetujui{background:#d1fae5;color:#065f46}.b.Revisi{background:#fee2e2;color:var(--red)}
+.b.Aktif,.b.Menunggu{background:#fef3c7;color:#92400e}.b.Selesai,.b.Disetujui,.b.ok{background:#d1fae5;color:#065f46}.b.Revisi,.b.off{background:#fee2e2;color:var(--red)}
 .bar{height:8px;background:#e6edf3;border-radius:9px;min-width:90px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal2),var(--amber));border-radius:9px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}
 .empty{text-align:center;color:var(--mute);padding:28px}
 .banner{background:linear-gradient(120deg,#fff7e0,#e6f7f4);border:1px solid #f3dca0;border-radius:var(--r);padding:20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
-.cert{background:#fff;border:3px double var(--teal);border-radius:12px;padding:34px;text-align:center;max-width:640px;margin:0 auto 18px}
-.cert h2{font-size:34px;letter-spacing:2px}.cert .nm{font-size:26px;font-weight:800;color:var(--teal);margin:8px 0}
-dialog{border:0;border-radius:var(--r);padding:26px;width:min(560px,94vw);box-shadow:0 20px 60px #0004}
-dialog::backdrop{background:#10243a99}
+.pv{max-height:46px;margin-top:6px;display:block;border:1px solid var(--line);border-radius:6px;padding:2px;background:#f8fafc}
+.clr{color:var(--red);font-size:12px;cursor:pointer;font-weight:600}
+.ok2{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:var(--r);padding:18px}
+dialog{border:0;border-radius:var(--r);padding:26px;width:min(560px,94vw);box-shadow:0 20px 60px #0004;max-height:94vh}
+dialog.wide{width:min(1000px,96vw)}dialog::backdrop{background:#10243a99}
 dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
-#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,30px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+#toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,30px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:860px){
- #login{grid-template-columns:1fr}.hero{padding:32px}.hero h1{font-size:28px}
+ #login,#ver{grid-template-columns:1fr}.hero{padding:32px}.hero h1{font-size:28px}
  #app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
- .brand{padding:0 10px 0 0}nav{display:flex;flex-wrap:wrap;gap:4px}nav button{width:auto}.me{margin:0 0 0 auto;border:0;padding:0}
- main{padding:20px 16px}.two{grid-template-columns:1fr}}
+ aside .brand{padding:0 10px 0 0}nav{display:flex;flex-wrap:wrap;gap:4px}nav button{width:auto}nav hr{display:none}.me{margin:0 0 0 auto;border:0;padding:0}
+ main{padding:20px 16px}.two,.three{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -79,11 +83,8 @@ dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-
 
 <section id="login">
   <div class="hero">
-    <div class="brand" style="padding:0;color:#fff">Portal Magang<small id="orgL"></small></div>
-    <div>
-      <h1>Satu portal untuk seluruh perjalanan magang Anda.</h1>
-      <p>Dari pendataan, absensi harian, logbook, penilaian, sampai sertifikat yang langsung bisa diunduh.</p>
-    </div>
+    <div class="brand"><img class="lg" data-logo hidden alt=""><span><span class="pn"></span><small class="co"></small></span></div>
+    <div><h1 class="tg"></h1><p>Pendataan, absensi harian, logbook, penilaian, sampai sertifikat yang bisa diunduh otomatis.</p></div>
     <div class="steps"><span>Pendataan</span><span>Absensi</span><span>Logbook</span><span>Penilaian</span><span>Sertifikat</span></div>
   </div>
   <div class="lbox">
@@ -97,9 +98,15 @@ dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-
   </div>
 </section>
 
+<section id="ver" hidden>
+  <div class="hero"><div class="brand"><img class="lg" data-logo hidden alt=""><span><span class="pn"></span><small class="co"></small></span></div>
+    <div><h1>Verifikasi keaslian sertifikat</h1><p>Halaman ini menampilkan data resmi dari sistem untuk nomor sertifikat yang dipindai.</p></div><span></span></div>
+  <div class="lbox"><div class="vbox" id="vres"><p class="empty">Memeriksa...</p></div></div>
+</section>
+
 <div id="app" hidden>
   <aside>
-    <div class="brand">Portal Magang<small id="orgA"></small></div>
+    <div class="brand"><img class="lg" data-logo hidden alt=""><span><span class="pn"></span><small class="co"></small></span></div>
     <nav id="nav"></nav>
     <div class="me"><b id="meN"></b><span id="meR"></span><div style="margin-top:8px"><a onclick="pwd()">Ganti sandi</a><a onclick="out()">Keluar</a></div></div>
   </aside>
@@ -109,52 +116,77 @@ dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-
 <div id="toast"></div>
 
 <script>
-/* ====== KONFIGURASI ====== */
+/* ====== SATU-SATUNYA KONFIGURASI DI FILE INI ====== */
 const API='https://script.google.com/macros/s/AKfycbwZvaxtuKHJzt-cajOvBqQWRCcsikmvGQPiO05f4Y9XNtLXVHkyu7OqDZosIHcPlX-vmg/exec';
-const ORG='PT. Dizamatra Powerindo', KOTA='Lahat', SIGN_NAME='Bertha Andrian', SIGN_TITLE='Sulistyo Adi Prabowo';
-/* ========================== */
+/* Nama perusahaan, logo, warna, sertifikat, dll. diubah dari menu Pengaturan setelah login sebagai admin. */
 const $=s=>document.querySelector(s),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let S=JSON.parse(localStorage.getItem('sess')||'null'),D={},V='dash';
+let S=JSON.parse(localStorage.getItem('sess')||'null'),D={},C={},V='dash',AC={};
 const staff=()=>S.role!=='peserta',isAdmin=()=>S.role==='admin';
 const fmt=d=>d?new Date(d+'T00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'-';
-const pct=p=>{const a=new Date(p.Mulai),b=new Date(p.Selesai);return p.Status==='Selesai'?100:Math.max(0,Math.min(100,Math.round((Date.now()-a)/(b-a)*100)))||0};
-const badge=s=>`<span class="b ${s}">${s}</span>`;
-const bar=p=>`<div class="bar"><i style="width:${pct(p)}%"></i></div><small>${pct(p)}%</small>`;
-const pred=n=>n>=90?'Sangat Baik':n>=80?'Baik':n>=70?'Cukup':'Memadai';
 const todayStr=()=>new Date().toLocaleDateString('sv-SE');
-$('#orgL').textContent=$('#orgA').textContent=ORG;
+const pct=p=>{const a=new Date(p.Mulai),b=new Date(p.Selesai);return p.Status==='Selesai'?100:Math.max(0,Math.min(100,Math.round((Date.now()-a)/(b-a)*100)))||0};
+const badge=(s,c)=>`<span class="b ${c||s}">${s}</span>`;
+const bar=p=>`<div class="bar"><i style="width:${pct(p)}%"></i></div><small>${pct(p)}%</small>`;
+const nm=id=>(D.P.find(p=>p.ID===id)||{}).Nama||id;
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const pred=n=>{const l=(C.predikat||'').split(',').map(s=>s.split(':')).map(([a,b])=>[+a,(b||'').trim()]).sort((x,y)=>y[0]-x[0]);return(l.find(x=>n>=x[0])||[0,'-'])[1]};
 
 async function api(a,d={}){
   const r=await fetch(API,{method:'POST',body:JSON.stringify({action:a,token:S&&S.token,...d})});
   const j=await r.json();
-  if(j.error){if(j.error==='SESSION'){out();}throw new Error(j.error==='SESSION'?'Sesi berakhir, silakan masuk lagi':j.error)}
+  if(j.error){if(j.error==='SESSION'&&S){out()}throw new Error(j.error==='SESSION'?'Sesi berakhir, silakan masuk lagi':j.error)}
   return j.data}
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800)}
-function out(){localStorage.removeItem('sess');location.reload()}
+const AS={};async function asset(id){return AS[id]||(AS[id]=await api('asset',{id}))}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000)}
+function out(){localStorage.removeItem('sess');sessionStorage.clear();location.reload()}
+
+/* ===== tema & identitas dari Pengaturan ===== */
+async function theme(){
+  const r=document.documentElement.style;r.setProperty('--teal',C.cPrimary);r.setProperty('--amber',C.cAccent);r.setProperty('--ink',C.cSide);
+  document.title=C.portal+' - '+C.org;
+  document.querySelectorAll('.pn').forEach(e=>e.textContent=C.portal);document.querySelectorAll(".co").forEach(e=>e.textContent=C.org);
+  document.querySelector('.tg').textContent=C.tagline;
+  if(C.logo){try{const u=await asset(C.logo);document.querySelectorAll('img[data-logo]').forEach(i=>{i.src=u;i.hidden=false})}catch(e){}}
+  else document.querySelectorAll('img[data-logo]').forEach(i=>i.hidden=true)}
+
+async function init(){
+  try{C=await api('config')}catch(e){C={org:'Perusahaan',portal:'Portal Magang',tagline:'',cPrimary:'#0f766e',cAccent:'#f59e0b',cSide:'#10243a'};$('#le').textContent='Tidak dapat terhubung ke server. Periksa URL API di index.html.'}
+  const v=new URLSearchParams(location.search).get('v');
+  if(v){$('#login').hidden=true;$('#ver').hidden=false;theme();return verify(v)}
+  theme();if(S)boot()}
+async function verify(no){
+  try{const p=await api('verify',{no});C.predikat=C.predikat||'';
+    $('#vres').innerHTML=`<div class="ok2"><span class="b ok">Sertifikat sah</span><h2 style="margin:10px 0 2px">${esc(p.Nama)}</h2><p class="s">${esc(p.Instansi)} - ${esc(p.Jurusan)}</p>
+    <p style="margin-top:12px">Divisi ${esc(p.Divisi)}<br>${fmt(p.Mulai)} s.d. ${fmt(p.Selesai)}<br>Predikat <b>${pred(+p.NilaiAkhir)}</b> (nilai ${esc(p.NilaiAkhir)})</p>
+    <p class="s" style="margin-top:12px">No. ${esc(p.NoSertifikat)} - terbit ${fmt(p.TglSertifikat)}</p></div>`}
+  catch(x){$('#vres').innerHTML=`<div class="panel"><span class="b off">Tidak valid</span><p style="margin-top:10px">${esc(x.message)}</p></div>`}}
 
 $('#lf').onsubmit=async e=>{e.preventDefault();const b=$('#lb');b.disabled=true;b.textContent='Memeriksa...';$('#le').textContent='';
-  try{S=await api('login',{username:$('#u').value.trim(),password:$('#pw').value});localStorage.setItem('sess',JSON.stringify(S));boot()}
+  try{S=await api('login',{username:$('#u').value.trim(),password:$('#pw').value});localStorage.setItem('sess',JSON.stringify(S));C=await api('config');theme();boot()}
   catch(x){$('#le').textContent=x.message}
   b.disabled=false;b.textContent='Masuk'};
 
-const NAV={staff:[['dash','Dashboard'],['peserta','Data Peserta'],['log','Logbook'],['abs','Absensi']],peserta:[['dash','Dashboard'],['abs','Absensi'],['log','Logbook'],['cert','Sertifikat']]};
+const NAV={staff:[['dash','Dashboard'],['peserta','Data Peserta'],['log','Logbook'],['abs','Absensi']],peserta:[['dash','Dashboard'],['abs','Absensi'],['log','Logbook'],['cert','Sertifikat']],admin:[['users','Akun pengguna'],['set','Pengaturan'],['data','Data dan migrasi']]};
 function boot(){
-  if(!S)return;
   $('#login').hidden=true;$('#app').hidden=false;
   $('#meN').textContent=S.nama;$('#meR').textContent={admin:'Admin',mentor:'Pembimbing',peserta:'Peserta magang'}[S.role];
-  $('#nav').innerHTML=NAV[staff()?'staff':'peserta'].map(([k,l])=>`<button data-k="${k}" onclick="go('${k}')">${l}</button>`).join('');
+  const L=staff()?NAV.staff.concat(isAdmin()?[['-','']].concat(NAV.admin):[]):NAV.peserta;
+  $('#nav').innerHTML=L.map(([k,l])=>k==='-'?'<hr>':`<button data-k="${k}" onclick="go('${k}')">${l}</button>`).join('');
   go('dash')}
 
 async function go(v){
   V=v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===v));
   $('#main').innerHTML='<p class="empty">Memuat data...</p>';
   try{[D.P,D.L,D.A]=await Promise.all([api('peserta'),api('logbook'),api('absensi')]);
+    if(v==='users')D.U=await api('users');
     $('#main').innerHTML=VIEWS[v]();
-    if(v==='cert'&&D.P[0]&&D.P[0].Status==='Selesai'&&!sessionStorage.getItem('dl')){sessionStorage.setItem('dl','1');genCert(D.P[0])}
+    if(v==='cert'&&D.P[0]&&D.P[0].Status==='Selesai'){const d=await mkCert(D.P[0]);$('#pvf').src=d.output('bloburl');if(!sessionStorage.getItem('dl')){sessionStorage.setItem('dl','1');d.save(certName(D.P[0]))}}
   }catch(x){$('#main').innerHTML=`<p class="empty">${esc(x.message)}</p>`}}
 
 const head=(t,s)=>`<h1 class="t">${t}</h1><p class="lead">${s}</p>`;
 const stat=(n,l,c='')=>`<div class="stat ${c}"><b>${n}</b><span>${l}</span></div>`;
+const xb=k=>`<button class="btn ghost sm" onclick="xl('${k}')">Unduh Excel</button>`;
+const lamp=id=>id?`<a class="clr" style="color:var(--teal)" onclick="viewF('${id}')">Lihat lampiran</a>`:'';
 
 const VIEWS={
 dash(){
@@ -169,13 +201,13 @@ dash(){
   return head('Dashboard',`Selamat datang, ${esc(p.Nama)}.`)+
   (p.Status==='Selesai'?`<div class="banner"><div><b>Selamat, magang Anda dinyatakan selesai.</b><br>Sertifikat sudah tersedia.</div><button class="btn amber" onclick="go('cert')">Buka sertifikat</button></div>`:'')+
   `<div class="grid">${stat(pct(p)+'%','Progres magang','hi')}${stat(D.A.length,'Hari hadir')}${stat(ok+'/'+D.L.length,'Logbook disetujui')}${stat(badge(p.Status),'Status')}</div>
-  <div class="panel"><h3>Program Anda</h3><div class="two"><p><small>Divisi</small><br>${esc(p.Divisi)}</p><p><small>Pembimbing</small><br>${esc(p.Pembimbing)}</p><p><small>Mulai</small><br>${fmt(p.Mulai)}</p><p><small>Selesai</small><br>${fmt(p.Selesai)}</p></div></div>`},
+  <div class="panel"><h3>Program Anda</h3><div class="two" style="margin-top:10px"><p><span class="s">Divisi</span>${esc(p.Divisi)}</p><p><span class="s">Pembimbing</span>${esc(p.Pembimbing)}</p><p><span class="s">Mulai</span>${fmt(p.Mulai)}</p><p><span class="s">Selesai</span>${fmt(p.Selesai)}</p></div></div>`},
 
 peserta(){
   return head('Data peserta','Pendataan, penilaian, dan penyelesaian magang.')+
-  `<div class="row"><span></span>${isAdmin()?'<button class="btn" onclick="openP()">Tambah peserta</button>':''}</div>
+  `<div class="row"><input placeholder="Cari nama, instansi, divisi..." oninput="fq(this.value)"><span>${xb('peserta')} ${isAdmin()?'<button class="btn" onclick="openP()">Tambah peserta</button>':''}</span></div>
   <div class="panel"><div class="tw"><table><tr><th>Peserta</th><th>Divisi / Pembimbing</th><th>Periode</th><th>Progres</th><th>Status</th><th></th></tr>
-  ${D.P.map(p=>`<tr><td><b>${esc(p.Nama)}</b><small>${esc(p.Instansi)} - ${esc(p.Jurusan)}</small><small>${esc(p.ID)}</small></td>
+  ${D.P.map(p=>`<tr data-s="${esc((p.Nama+p.Instansi+p.Divisi+p.ID+p.Pembimbing).toLowerCase())}"><td><b>${esc(p.Nama)}</b><small>${esc(p.Instansi)} - ${esc(p.Jurusan)}</small><small>${esc(p.ID)}</small></td>
   <td>${esc(p.Divisi)}<small>${esc(p.Pembimbing)}</small></td><td>${fmt(p.Mulai)}<small>s.d. ${fmt(p.Selesai)}</small></td><td>${bar(p)}</td>
   <td>${badge(p.Status)}${p.NilaiAkhir?`<small>Nilai ${esc(p.NilaiAkhir)}</small>`:''}</td>
   <td style="white-space:nowrap">${isAdmin()?`<button class="btn ghost sm" onclick="openP('${p.ID}')">Ubah</button> `:''}
@@ -183,84 +215,183 @@ peserta(){
 
 abs(){
   const t=D.A.find(a=>a.Tanggal===todayStr()),lbl=!t?'Absen masuk':!t.Keluar?'Absen pulang':'Absensi hari ini lengkap';
-  const nm=id=>(D.P.find(p=>p.ID===id)||{}).Nama||id;
   return head('Absensi',staff()?'Rekap kehadiran peserta.':'Catat kehadiran harian Anda.')+
+  (staff()?`<div class="row"><span></span>${xb('abs')}</div>`:'')+
   (!staff()&&D.P[0].Status==='Aktif'?`<div class="panel row"><div><b>${fmt(todayStr())}</b><br><small>${t?`Masuk ${t.Masuk}${t.Keluar?' - Pulang '+t.Keluar:''}`:'Anda belum absen hari ini'}</small></div><button class="btn" ${t&&t.Keluar?'disabled':''} onclick="absen()">${lbl}</button></div>`:'')+
   `<div class="panel"><div class="tw"><table><tr>${staff()?'<th>Peserta</th>':''}<th>Tanggal</th><th>Masuk</th><th>Pulang</th></tr>
   ${D.A.map(a=>`<tr>${staff()?`<td>${esc(nm(a.PesertaID))}</td>`:''}<td>${fmt(a.Tanggal)}</td><td>${a.Masuk||'-'}</td><td>${a.Keluar||'-'}</td></tr>`).join('')||'<tr><td colspan=4 class="empty">Belum ada data absensi.</td></tr>'}</table></div></div>`},
 
 log(){
-  const nm=id=>(D.P.find(p=>p.ID===id)||{}).Nama||id;
   const L=staff()?[...D.L].sort((a,b)=>(b.Status==='Menunggu')-(a.Status==='Menunggu')):D.L;
   return head('Logbook',staff()?'Tinjau aktivitas harian peserta.':'Tulis aktivitas harian dan hasil kerja Anda.')+
-  (!staff()&&D.P[0].Status==='Aktif'?`<div class="panel"><h3>Tambah aktivitas</h3><form onsubmit="saveLog(event)">
+  (staff()?`<div class="row"><span></span>${xb('log')}</div>`:'')+
+  (!staff()&&D.P[0].Status==='Aktif'?`<div class="panel"><h3>Tambah aktivitas</h3><form onsubmit="saveLog(event)" style="margin-top:10px">
   <label>Tanggal<input name="Tanggal" type="date" value="${todayStr()}" required></label>
   <label>Aktivitas<textarea name="Aktivitas" rows="3" required placeholder="Apa yang Anda kerjakan hari ini?"></textarea></label>
-  <label>Hasil / output<input name="Output" placeholder="Contoh: laporan inspeksi 3 area"></label><button class="btn">Kirim logbook</button></form></div>`:'')+
+  <div class="two"><label>Hasil / output<input name="Output" placeholder="Contoh: laporan inspeksi 3 area"></label><label>Foto / bukti (opsional)<input type="file" name="file" accept="image/*"></label></div>
+  <button class="btn">Kirim logbook</button></form></div>`:'')+
   `<div class="panel"><div class="tw"><table><tr>${staff()?'<th>Peserta</th>':''}<th>Tanggal</th><th>Aktivitas</th><th>Status</th>${staff()?'<th></th>':''}</tr>
-  ${L.map(l=>`<tr>${staff()?`<td>${esc(nm(l.PesertaID))}</td>`:''}<td style="white-space:nowrap">${fmt(l.Tanggal)}</td><td>${esc(l.Aktivitas)}<small>Output: ${esc(l.Output)||'-'}</small>${l.Catatan?`<small style="color:var(--red)">Catatan: ${esc(l.Catatan)}</small>`:''}</td><td>${badge(l.Status)}</td>
+  ${L.map(l=>`<tr>${staff()?`<td>${esc(nm(l.PesertaID))}</td>`:''}<td style="white-space:nowrap">${fmt(l.Tanggal)}</td><td>${esc(l.Aktivitas)}<small>Output: ${esc(l.Output)||'-'}</small>${lamp(l.Lampiran)}${l.Catatan?`<small style="color:var(--red)">Catatan: ${esc(l.Catatan)}</small>`:''}</td><td>${badge(l.Status)}</td>
   ${staff()?`<td style="white-space:nowrap">${l.Status!=='Disetujui'?`<button class="btn sm" onclick="rev('${l.ID}','Disetujui')">Setujui</button> `:''}<button class="btn red sm" onclick="rev('${l.ID}','Revisi')">Revisi</button></td>`:''}</tr>`).join('')||'<tr><td colspan=5 class="empty">Belum ada logbook.</td></tr>'}</table></div></div>`},
 
 cert(){
   const p=D.P[0];
   if(p.Status!=='Selesai')return head('Sertifikat','Sertifikat terbit otomatis setelah magang dinyatakan selesai.')+`<div class="panel empty">Magang Anda masih berjalan (${pct(p)}%).<br>Lengkapi absensi dan logbook, lalu tunggu penilaian dari pembimbing.</div>`;
   return head('Sertifikat','Magang Anda dinyatakan selesai. Unduhan dimulai otomatis.')+
-  `<div class="cert"><small>${esc(ORG)}</small><h2>SERTIFIKAT</h2><small>No. ${esc(p.NoSertifikat)}</small><p style="margin-top:14px">Diberikan kepada</p><div class="nm">${esc(p.Nama)}</div>
-  <p>${esc(p.Instansi)}<br>Telah menyelesaikan magang di divisi ${esc(p.Divisi)}<br>${fmt(p.Mulai)} s.d. ${fmt(p.Selesai)}<br>Predikat <b>${pred(+p.NilaiAkhir)}</b> (nilai ${esc(p.NilaiAkhir)})</p></div>
-  <div style="text-align:center"><button class="btn amber" onclick="genCert(D.P[0])">Unduh sertifikat (PDF)</button></div>`}
+  `<iframe id="pvf" style="width:100%;height:520px;border:1px solid var(--line);border-radius:var(--r);background:#fff;margin-bottom:14px"></iframe>
+  <button class="btn amber" onclick="dl('${p.ID}')">Unduh sertifikat (PDF)</button>`},
+
+users(){
+  return head('Akun pengguna','Kelola akun admin, pembimbing, dan peserta.')+
+  `<div class="row"><span></span><button class="btn" onclick="openU()">Tambah akun</button></div>
+  <div class="panel"><div class="tw"><table><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Status</th><th></th></tr>
+  ${D.U.map(u=>`<tr><td>${esc(u.Username)}</td><td>${esc(u.Nama)}${u.PesertaID?`<small>${esc(u.PesertaID)}</small>`:''}</td><td>${esc(u.Role)}</td><td>${u.Aktif==='0'?badge('Nonaktif','off'):badge('Aktif','ok')}</td>
+  <td style="white-space:nowrap"><button class="btn ghost sm" onclick="resetP('${esc(u.Username)}')">Reset sandi</button> ${u.Username===S.username?'':`<button class="btn ${u.Aktif==='0'?'':'red'} sm" onclick="tog('${esc(u.Username)}')">${u.Aktif==='0'?'Aktifkan':'Nonaktifkan'}</button>`}</td></tr>`).join('')}</table></div></div>`},
+
+set(){
+  const f=(l,k,t='text',x='')=>`<label>${l}<input name="${k}" type="${t}" value="${esc(C[k])}" ${x}></label>`;
+  const im=(l,k,h)=>`<label>${l}<input type="file" accept="image/*" onchange="upImg(this,'${k}')"><input type="hidden" name="${k}" value="${esc(C[k])}"><span class="s">${h}</span><span id="pv_${k}"></span></label>`;
+  setTimeout(()=>['logo','ttd','bg'].forEach(k=>showPv(k,C[k])),0);
+  return head('Pengaturan','Ubah identitas, tampilan, sertifikat, dan penilaian tanpa menyentuh kode.')+
+  `<form id="sf" onsubmit="saveSet(event)">
+  <div class="panel"><h3>Identitas dan tampilan</h3><p class="hint">Tampil di halaman login, menu samping, dan sertifikat.</p>
+  <div class="two">${f('Nama perusahaan','org')}${f('Nama portal','portal')}${f('Kota (untuk tanggal sertifikat)','kota')}${f('Slogan halaman login','tagline')}</div>
+  ${im('Logo perusahaan','logo','PNG transparan paling baik. Otomatis diperkecil.')}
+  <div class="three">${f('Warna utama','cPrimary','color')}${f('Warna aksen','cAccent','color')}${f('Warna menu samping','cSide','color')}</div></div>
+  <div class="panel"><h3>Desain sertifikat</h3><p class="hint">Teks isi bisa memakai: {nama} {instansi} {jurusan} {divisi} {pembimbing} {mulai} {selesai} {predikat} {nilai} {no}</p>
+  <div class="two"><label>Template<select name="certTpl">${[['klasik','Klasik (bingkai ganda)'],['modern','Modern (pita samping)'],['minimal','Minimal (serif)']].map(([v,l])=>`<option value="${v}" ${C.certTpl===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  ${f('Judul','certTitle')}${f('Kalimat pembuka','certIntro')}<label>Tampilkan QR verifikasi<select name="certQR"><option value="1" ${C.certQR==='1'?'selected':''}>Ya</option><option value="0" ${C.certQR==='0'?'selected':''}>Tidak</option></select></label></div>
+  <label>Teks isi<textarea name="certBody" rows="3">${esc(C.certBody)}</textarea></label>
+  <div class="two">${f('Nama penandatangan','signName')}${f('Jabatan penandatangan','signTitle')}</div>
+  ${im('Tanda tangan (gambar)','ttd','PNG transparan, tanda tangan di atas nama.')}
+  ${im('Gambar latar penuh (opsional)','bg','Landscape A4, mis. 2480 x 1754 px. Jika diisi, menggantikan desain bawaan template.')}
+  ${f('Format nomor sertifikat','certNoFmt')}<p class="s" style="margin:-6px 0 12px">Gunakan {seq} urutan, {bln} bulan romawi, {thn} tahun.</p>
+  <button type="button" class="btn ghost" onclick="prevCert()">Pratinjau sertifikat</button></div>
+  <div class="panel"><h3>Penilaian dan akun</h3><p class="hint">Aspek nilai bebas diubah. Nilai akhir adalah rata-rata semua aspek.</p>
+  ${f('Aspek penilaian (pisahkan koma)','aspek')}${f('Predikat (batas:nama, pisahkan koma)','predikat')}${f('Sandi awal akun baru / reset','passDefault')}</div>
+  <button class="btn">Simpan pengaturan</button></form>`},
+
+data(){
+  return head('Data dan migrasi','Cadangkan seluruh data atau pindahkan ke spreadsheet lain.')+
+  `<div class="panel"><h3>Ekspor</h3><p class="hint">Satu file Excel berisi semua sheet: akun, peserta, absensi, logbook, penilaian, dan pengaturan.</p><button class="btn" onclick="expAll()">Unduh cadangan Excel</button></div>
+  <div class="panel"><h3>Impor</h3><p class="hint">Pilih file Excel hasil ekspor (atau file dengan nama sheet dan kolom yang sama, misalnya daftar peserta lama dari Excel).</p>
+  <div class="two"><label>File Excel<input type="file" id="xf" accept=".xlsx,.xls"></label><label>Mode<select id="xm"><option value="merge">Gabung (tambah baru, perbarui yang sama)</option><option value="replace">Ganti semua isi sheet yang ada di file</option></select></label></div>
+  <button class="btn amber" onclick="impAll()">Impor data</button></div>
+  <div class="panel"><h3>Catatan migrasi</h3><p class="s">Logo, tanda tangan, dan lampiran logbook tersimpan di Google Drive pemilik script. Pindah ke akun Google lain: unggah ulang gambar lewat Pengaturan. Mode "Ganti" pada sheet Users akan menimpa akun, pastikan file memuat akun admin.</p></div>`}
 };
 
-/* ===== aksi ===== */
+/* ===== aksi umum ===== */
 const F=(l,n,v='',t='text',x='')=>`<label>${l}<input name="${n}" type="${t}" value="${esc(v)}" ${x}></label>`;
 const obj=f=>Object.fromEntries(new FormData(f));
-function close(){$('#dlg').close()}
+function close(){$('#dlg').close();$('#dlg').className=''}
+function fq(q){q=q.toLowerCase();document.querySelectorAll('tr[data-s]').forEach(r=>r.hidden=!r.dataset.s.includes(q))}
+function xl(k){const m={peserta:()=>D.P.map(({_r,...r})=>r),abs:()=>D.A.map(a=>({Nama:nm(a.PesertaID),Tanggal:a.Tanggal,Masuk:a.Masuk,Pulang:a.Keluar})),log:()=>D.L.map(l=>({Nama:nm(l.PesertaID),Tanggal:l.Tanggal,Aktivitas:l.Aktivitas,Output:l.Output,Status:l.Status,Catatan:l.Catatan}))};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(m[k]()),k);XLSX.writeFile(wb,`${k}_${todayStr()}.xlsx`)}
+function rs(file,max,type){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;const x=c.getContext('2d');if(type==='image/jpeg'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(i,0,0,c.width,c.height);res(c.toDataURL(type,.82))};i.src=r.result};r.readAsDataURL(file)})}
+async function viewF(id){try{const u=await asset(id);const w=window.open();w.document.write(`<img src="${u}" style="max-width:100%">`)}catch(x){toast(x.message)}}
+
+/* ===== peserta & penilaian ===== */
 async function openP(id){
   const p=D.P.find(x=>x.ID===id)||{};let M=[];try{M=await api('mentors')}catch(e){}
   $('#dlg').innerHTML=`<h3>${id?'Ubah':'Tambah'} peserta</h3><form onsubmit="saveP(event)"><input type="hidden" name="ID" value="${esc(p.ID)}">
   <div class="two">${F('Nama lengkap','Nama',p.Nama,'text','required')}${F('Instansi / sekolah','Instansi',p.Instansi,'text','required')}${F('Jurusan','Jurusan',p.Jurusan)}${F('Email','Email',p.Email,'email')}${F('No. HP','HP',p.HP)}${F('Divisi','Divisi',p.Divisi,'text','required')}
   ${F('Tanggal mulai','Mulai',p.Mulai,'date','required')}${F('Tanggal selesai','Selesai',p.Selesai,'date','required')}</div>
   <label>Pembimbing<select name="Pembimbing" required><option value="">Pilih pembimbing</option>${M.map(m=>`<option ${m===p.Pembimbing?'selected':''}>${esc(m)}</option>`).join('')}</select></label>
-  ${id?'':F('Username login peserta','Username','','text','required placeholder="sandi awal: magang123"')}
-  <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
+  ${id?'':F('Username login peserta','Username','','text','required placeholder="sandi awal sesuai Pengaturan"')}
+  <div class="acts">${id?`<button type="button" class="btn red" onclick="delP('${id}')" style="margin-right:auto">Hapus</button>`:''}<button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
 async function saveP(e){e.preventDefault();try{await api('savePeserta',{data:obj(e.target)});close();toast('Data peserta tersimpan');go('peserta')}catch(x){toast(x.message)}}
-function openN(id){const p=D.P.find(x=>x.ID===id);
+async function delP(id){if(!confirm('Hapus peserta ini? Akun loginnya dinonaktifkan.'))return;try{await api('hapusPeserta',{id});close();go('peserta')}catch(x){toast(x.message)}}
+async function openN(id){const p=D.P.find(x=>x.ID===id);let old={};
+  try{const r=(await api('penilaian')).find(x=>x.PesertaID===id);if(r)old={...JSON.parse(r.Nilai),Catatan:r.Catatan}}catch(e){}
   $('#dlg').innerHTML=`<h3>Penilaian - ${esc(p.Nama)}</h3><form onsubmit="saveN(event,'${id}')"><div class="two">
-  ${['Disiplin','Kompetensi','Kerjasama','Inisiatif'].map(k=>F(k+' (0-100)',k,'','number','min=0 max=100 required')).join('')}</div>
-  <label>Catatan pembimbing<textarea name="Catatan" rows="2"></textarea></label>
+  ${C.aspek.split(',').map(k=>k.trim()).filter(Boolean).map(k=>F(k+' (0-100)','n_'+k,old[k],'number','min=0 max=100 required')).join('')}</div>
+  <label>Catatan pembimbing<textarea name="Catatan" rows="2">${esc(old.Catatan)}</textarea></label>
   <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn ghost" name="m" value="simpan">Simpan nilai</button><button class="btn amber" name="m" value="selesai">Simpan dan nyatakan selesai</button></div></form>`;$('#dlg').showModal()}
-async function saveN(e,id){e.preventDefault();const m=e.submitter.value;
+async function saveN(e,id){e.preventDefault();const m=e.submitter.value,o=obj(e.target),Nilai={};
+  Object.keys(o).filter(k=>k.startsWith('n_')).forEach(k=>Nilai[k.slice(2)]=o[k]);
   if(m==='selesai'&&!confirm('Nyatakan magang selesai? Sertifikat akan terbit dan tidak bisa dibatalkan.'))return;
-  try{await api('saveNilai',{id,data:obj(e.target)});if(m==='selesai'){await api('selesaikan',{id});toast('Magang selesai, sertifikat terbit')}else toast('Nilai tersimpan');close();go('peserta')}catch(x){toast(x.message)}}
+  try{await api('saveNilai',{id,data:{Nilai,Catatan:o.Catatan}});if(m==='selesai'){await api('selesaikan',{id});toast('Magang selesai, sertifikat terbit')}else toast('Nilai tersimpan');close();go('peserta')}catch(x){toast(x.message)}}
+
+/* ===== absen, logbook, sandi ===== */
 async function absen(){try{toast(await api('absen'));go('abs')}catch(x){toast(x.message)}}
-async function saveLog(e){e.preventDefault();try{await api('saveLogbook',{data:obj(e.target)});toast('Logbook terkirim');go('log')}catch(x){toast(x.message)}}
+async function saveLog(e){e.preventDefault();const o=obj(e.target),f=e.target.file.files[0];delete o.file;
+  try{if(f){toast('Mengunggah foto...');o.Lampiran=await api('upload',{data:await rs(f,1200,'image/jpeg'),name:'logbook.jpg'})}
+  await api('saveLogbook',{data:o});toast('Logbook terkirim');go('log')}catch(x){toast(x.message)}}
 async function rev(id,status){let catatan='';if(status==='Revisi'){catatan=prompt('Apa yang perlu direvisi?');if(!catatan)return}
   try{await api('reviewLogbook',{id,status,catatan});toast('Logbook '+status.toLowerCase());go('log')}catch(x){toast(x.message)}}
 function pwd(){$('#dlg').innerHTML=`<h3>Ganti kata sandi</h3><form onsubmit="savePwd(event)">${F('Sandi lama','lama','','password','required')}${F('Sandi baru (min. 6 karakter)','baru','','password','required minlength=6')}
   <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
 async function savePwd(e){e.preventDefault();try{await api('password',obj(e.target));close();toast('Kata sandi diganti')}catch(x){toast(x.message)}}
-function dl(id){genCert(D.P.find(p=>p.ID===id))}
+
+/* ===== akun (admin) ===== */
+function openU(){
+  $('#dlg').innerHTML=`<h3>Tambah akun</h3><form onsubmit="saveU(event)"><div class="two">${F('Username','Username','','text','required')}${F('Nama','Nama','','text','required')}
+  <label>Peran<select name="Role"><option value="mentor">Pembimbing</option><option value="admin">Admin</option><option value="peserta">Peserta</option></select></label>
+  <label>Untuk peserta (jika peran Peserta)<select name="PesertaID"><option value="">-</option>${D.P.map(p=>`<option value="${p.ID}">${esc(p.Nama)}</option>`).join('')}</select></label></div>
+  ${F('Kata sandi (kosongkan = sandi awal)','Password')}
+  <div class="acts"><button type="button" class="btn ghost" onclick="close()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
+async function saveU(e){e.preventDefault();try{await api('saveUser',{data:obj(e.target)});close();toast('Akun dibuat');go('users')}catch(x){toast(x.message)}}
+async function tog(u){try{await api('toggleUser',{username:u});go('users')}catch(x){toast(x.message)}}
+async function resetP(u){if(!confirm('Reset sandi '+u+' ke sandi awal?'))return;try{toast('Sandi diatur ke: '+await api('resetPass',{username:u}))}catch(x){toast(x.message)}}
+
+/* ===== pengaturan (admin) ===== */
+async function showPv(k,id){const e=$('#pv_'+k);if(!e)return;if(!id){e.innerHTML='';return}
+  try{e.innerHTML=`<img class="pv" src="${await asset(id)}" alt=""><span class="clr" onclick="clrImg('${k}')">Hapus gambar</span>`}catch(x){e.innerHTML=''}}
+async function upImg(inp,k){const f=inp.files[0];if(!f)return;toast('Mengunggah...');
+  try{const big=k==='bg',id=await api('upload',{data:await rs(f,big?2000:500,big?'image/jpeg':'image/png'),name:k});document.querySelector(`#sf [name=${k}]`).value=id;await showPv(k,id);toast('Gambar siap, klik Simpan pengaturan')}catch(x){toast(x.message)}}
+function clrImg(k){document.querySelector(`#sf [name=${k}]`).value='';$('#pv_'+k).innerHTML=''}
+async function saveSet(e){e.preventDefault();try{await api('saveConfig',{data:obj(e.target)});C=await api('config');theme();toast('Pengaturan tersimpan');go('set')}catch(x){toast(x.message)}}
+async function prevCert(){
+  const cf={...C,...obj($('#sf'))},p={Nama:'Nama Peserta Contoh',Instansi:'Universitas Contoh',Jurusan:'Teknik Industri',Divisi:'Operasional',Pembimbing:'Pembimbing Contoh',Mulai:'2026-01-05',Selesai:'2026-04-05',NilaiAkhir:'88',NoSertifikat:'001/SERT-PKL/XI/2026',TglSertifikat:todayStr()};
+  try{const d=await mkCert(p,cf);$('#dlg').className='wide';$('#dlg').innerHTML=`<h3>Pratinjau sertifikat</h3><iframe src="${d.output('bloburl')}" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px"></iframe><div class="acts" style="margin-top:12px"><button class="btn" onclick="close()">Tutup</button></div>`;$('#dlg').showModal()}catch(x){toast(x.message)}}
+
+/* ===== migrasi data ===== */
+async function expAll(){try{const o=await api('exportAll'),wb=XLSX.utils.book_new();Object.keys(o).forEach(n=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(o[n]),n));XLSX.writeFile(wb,`Cadangan_Portal_Magang_${todayStr()}.xlsx`)}catch(x){toast(x.message)}}
+async function impAll(){const f=$('#xf').files[0];if(!f)return toast('Pilih file Excel dulu');const mode=$('#xm').value;
+  if(mode==='replace'&&!confirm('Isi sheet yang ada di file akan DIGANTI. Lanjutkan?'))return;
+  try{const wb=XLSX.read(await f.arrayBuffer(),{cellDates:false}),data={};
+    wb.SheetNames.forEach(n=>data[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:'',dateNF:'yyyy-mm-dd'}));
+    toast('Mengimpor...');await api('importAll',{data,mode});toast('Impor selesai');C=await api('config');theme();go('dash')}catch(x){toast(x.message)}}
 
 /* ===== sertifikat PDF ===== */
-function genCert(p){
-  const {jsPDF}=window.jspdf,d=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),W=297,Ht=210;
-  const c=(t,y,s,st='normal',col=[16,36,58])=>{d.setFont('helvetica',st);d.setFontSize(s);d.setTextColor(...col);d.text(t,W/2,y,{align:'center'})};
-  d.setFillColor(15,118,110);d.rect(0,0,W,Ht,'F');d.setFillColor(255,255,255);d.rect(8,8,W-16,Ht-16,'F');
-  d.setDrawColor(245,158,11);d.setLineWidth(1.2);d.rect(14,14,W-28,Ht-28);d.setDrawColor(15,118,110);d.setLineWidth(.3);d.rect(17,17,W-34,Ht-34);
-  c(ORG.toUpperCase(),34,13,'bold',[15,118,110]);
-  c('SERTIFIKAT',58,42,'bold');
-  c('Nomor: '+p.NoSertifikat,68,11,'normal',[100,116,139]);
-  c('Diberikan kepada',84,13);
-  c(p.Nama,102,30,'bold',[15,118,110]);
-  d.setDrawColor(245,158,11);d.setLineWidth(.8);d.line(75,107,W-75,107);
-  c(`${p.Instansi}${p.Jurusan?' - '+p.Jurusan:''}`,117,12);
-  c(`Telah menyelesaikan program magang / praktik kerja lapangan di divisi ${p.Divisi}`,128,12);
-  c(`pada periode ${fmt(p.Mulai)} s.d. ${fmt(p.Selesai)} dengan predikat ${pred(+p.NilaiAkhir)} (nilai ${p.NilaiAkhir}).`,135,12);
-  c(`${KOTA}, ${fmt(p.TglSertifikat)}`,154,11);
-  d.setDrawColor(16,36,58);d.setLineWidth(.3);d.line(W/2-35,180,W/2+35,180);
-  c(SIGN_NAME,185,12,'bold');c(SIGN_TITLE,190,10,'normal',[100,116,139]);
-  d.save('Sertifikat_'+p.Nama.replace(/\s+/g,'_')+'.pdf')}
+const certName=p=>'Sertifikat_'+p.Nama.replace(/\s+/g,'_')+'.pdf';
+async function dl(id){const d=await mkCert(D.P.find(p=>p.ID===id));d.save(certName(D.P.find(p=>p.ID===id)))}
+async function mkCert(p,cf){
+  cf=cf||C;const {jsPDF}=window.jspdf,d=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),W=297,Ht=210,T=cf.certTpl,P=rgb(cf.cPrimary),A=rgb(cf.cAccent),I=[16,36,58],M=[100,116,139];
+  const [logo,ttd,bg]=await Promise.all([cf.logo,cf.ttd,cf.bg].map(x=>x?asset(x).catch(()=>null):null));
+  const mod=T==='modern',X=mod?66:W/2,al=mod?'left':'center',font=T==='minimal'?'times':'helvetica',bgOn=!!bg;
+  const tx=(t,y,s,st='normal',col=I)=>{d.setFont(font,st);d.setFontSize(s);d.setTextColor(...col);d.text(t,X,y,{align:al})};
+  const put=(im,x,y,mw,mh,fm)=>{const q=d.getImageProperties(im),k=Math.min(mw/q.width,mh/q.height);d.addImage(im,q.fileType,x-(fm==='c'?q.width*k/2:0),y,q.width*k,q.height*k)};
+  const v={nama:p.Nama,instansi:p.Instansi,jurusan:p.Jurusan,divisi:p.Divisi,pembimbing:p.Pembimbing,mulai:fmt(p.Mulai),selesai:fmt(p.Selesai),predikat:pred(+p.NilaiAkhir),nilai:p.NilaiAkhir,no:p.NoSertifikat};
+  const fill=s=>String(s||'').replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:m);
+  if(bgOn)d.addImage(bg,'JPEG',0,0,W,Ht);
+  else if(T==='klasik'){d.setFillColor(...P);d.rect(0,0,W,Ht,'F');d.setFillColor(255,255,255);d.rect(8,8,W-16,Ht-16,'F');d.setDrawColor(...A);d.setLineWidth(1.2);d.rect(14,14,W-28,Ht-28);d.setDrawColor(...P);d.setLineWidth(.3);d.rect(17,17,W-34,Ht-34)}
+  else if(mod){d.setFillColor(...P);d.rect(0,0,52,Ht,'F');d.setFillColor(...A);d.rect(52,0,3,Ht,'F')}
+  else{d.setDrawColor(...P);d.setLineWidth(.5);d.rect(12,12,W-24,Ht-24)}
+  if(logo)mod?put(logo,8,14,36,30):put(logo,W/2,19,50,17,'c');
+  const y0=mod?42:48;
+  tx(fill(cf.org).toUpperCase(),y0-4,12,'bold',P);
+  tx(cf.certTitle,y0+20,mod?38:42,'bold');
+  tx('Nomor: '+p.NoSertifikat,y0+30,11,'normal',M);
+  tx(cf.certIntro,y0+46,13);
+  tx(p.Nama,y0+64,28,'bold',P);
+  d.setDrawColor(...A);d.setLineWidth(.8);mod?d.line(X,y0+69,X+110,y0+69):d.line(75,y0+69,W-75,y0+69);
+  tx(`${p.Instansi}${p.Jurusan?' - '+p.Jurusan:''}`,y0+79,12);
+  let yy=y0+90;fill(cf.certBody).split('\n').forEach(l=>d.splitTextToSize(l,mod?205:215).forEach(s=>{tx(s,yy,12);yy+=6.5}));
+  tx(`${cf.kota}, ${fmt(p.TglSertifikat)}`,Math.max(yy+8,150),11);
+  const sy=170,sx=mod?X+30:W/2;
+  if(ttd)put(ttd,sx,sy-22,45,20,'c');
+  d.setDrawColor(...I);d.setLineWidth(.3);d.line(sx-35,sy,sx+35,sy);
+  d.setFont(font,'bold');d.setFontSize(12);d.setTextColor(...I);d.text(cf.signName,sx,sy+6,{align:'center'});
+  d.setFont(font,'normal');d.setFontSize(10);d.setTextColor(...M);d.text(cf.signTitle,sx,sy+11,{align:'center'});
+  if(cf.certQR==='1'&&p.NoSertifikat){
+    const q=qrcode(0,'M');q.addData(location.origin+location.pathname+'?v='+encodeURIComponent(p.NoSertifikat));q.make();
+    const n=q.getModuleCount(),sz=24,s=sz/n,qx=W-14-sz-8,qy=Ht-14-sz-14;d.setFillColor(...I);
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d.rect(qx+c*s,qy+r*s,s+.05,s+.05,'F');
+    d.setFont(font,'normal');d.setFontSize(7);d.setTextColor(...M);d.text('Pindai untuk verifikasi',qx+sz/2,qy+sz+4,{align:'center'})}
+  return d}
 
-boot();
+init();
 </script>
 </body>
 </html>
