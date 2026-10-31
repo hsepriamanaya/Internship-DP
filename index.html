@@ -69,7 +69,7 @@ th{text-align:left;color:var(--mute);font-weight:600;font-size:13px;padding:8px 
 td{padding:11px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}tr:last-child td{border:0}
 td small,.s{color:var(--mute);display:block;font-size:12.5px}
 .b{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
-.b.Aktif,.b.Menunggu{background:#fef3c7;color:#92400e}.b.Selesai,.b.Disetujui,.b.ok{background:#d1fae5;color:#065f46}.b.Revisi,.b.off{background:#fee2e2;color:var(--red)}
+.b.Aktif,.b.Menunggu{background:#fef3c7;color:#92400e}.b.Selesai,.b.Disetujui,.b.ok{background:#d1fae5;color:#065f46}.b.Diterima{background:#d1fae5;color:#065f46}.b.Ditolak,.b.Revisi,.b.off{background:#fee2e2;color:var(--red)}
 .bar{height:8px;background:#e6edf3;border-radius:9px;min-width:90px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal2),var(--amber));border-radius:9px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}
 .empty{text-align:center;color:var(--mute);padding:28px}
@@ -105,6 +105,11 @@ dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-
       <label>Kata sandi<input id="pw" type="password" autocomplete="current-password" required></label>
       <button class="btn full" id="lb">Masuk</button>
       <p class="err" id="le"></p>
+      <div id="apply" hidden style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line)">
+        <p class="s" style="margin-bottom:10px">Belum punya akun? Ajukan magang di sini.</p>
+        <button type="button" class="btn ghost full" onclick="openApply()">Ajukan magang</button>
+        <p style="text-align:center;margin-top:10px"><a class="clr" style="color:var(--teal)" onclick="openCek()">Cek status pengajuan</a></p>
+      </div>
     </form>
   </div>
 </section>
@@ -166,7 +171,7 @@ async function theme(){
   const r=document.documentElement.style;r.setProperty('--teal',C.cPrimary);r.setProperty('--amber',C.cAccent);r.setProperty('--ink',C.cSide);
   document.title=C.portal+' - '+C.org;
   document.querySelectorAll('.pn').forEach(e=>e.textContent=C.portal);document.querySelectorAll(".co").forEach(e=>e.textContent=C.org);
-  document.querySelector('.tg').textContent=C.tagline;
+  document.querySelector('.tg').textContent=C.tagline;$('#apply').hidden=C.bukaPendaftaran!=='1';
   if(C.logo){try{const u=await asset(C.logo);document.querySelectorAll('img[data-logo]').forEach(i=>{i.src=u;i.hidden=false})}catch(e){}}
   else document.querySelectorAll('img[data-logo]').forEach(i=>i.hidden=true)}
 
@@ -187,7 +192,7 @@ $('#lf').onsubmit=async e=>{e.preventDefault();const b=$('#lb');b.disabled=true;
   catch(x){$('#le').textContent=x.message}
   b.disabled=false;b.textContent='Masuk'};
 
-const NAV={staff:[['dash','Dashboard'],['peserta','Data Peserta'],['log','Logbook'],['abs','Absensi']],peserta:[['dash','Dashboard'],['abs','Absensi'],['log','Logbook'],['cert','Sertifikat']],admin:[['users','Akun pengguna'],['set','Pengaturan'],['data','Data dan migrasi']]};
+const NAV={staff:[['dash','Dashboard'],['pj','Pengajuan'],['peserta','Data Peserta'],['log','Logbook'],['abs','Absensi']],peserta:[['dash','Dashboard'],['abs','Absensi'],['log','Logbook'],['cert','Sertifikat']],admin:[['users','Akun pengguna'],['set','Pengaturan'],['data','Data dan migrasi']]};
 function boot(){
   $('#login').hidden=true;$('#app').hidden=false;
   $('#meN').textContent=S.nama;$('#meR').textContent={admin:'Admin',mentor:'Pembimbing',peserta:'Peserta magang'}[S.role];
@@ -198,7 +203,7 @@ function boot(){
 async function go(v){
   V=v;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===v));
   $('#main').innerHTML='<p class="empty">Memuat data...</p>';
-  try{[D.P,D.L,D.A]=await Promise.all([api('peserta'),api('logbook'),api('absensi')]);
+  try{[D.P,D.L,D.A,D.PJ]=await Promise.all([api('peserta'),api('logbook'),api('absensi'),staff()?api('pengajuan'):[]]);
     if(v==='users')D.U=await api('users');
     $('#main').innerHTML=VIEWS[v]();
     if(v==='cert'&&D.P[0]&&D.P[0].Status==='Selesai'){const d=await mkCert(D.P[0]);$('#pvf').src=d.output('bloburl');if(!sessionStorage.getItem('dl')){sessionStorage.setItem('dl','1');d.save(certName(D.P[0]))}}
@@ -214,7 +219,7 @@ dash(){
   if(staff()){
     const P=D.P,ak=P.filter(p=>p.Status==='Aktif'),wait=D.L.filter(l=>l.Status==='Menunggu').length;
     return head('Dashboard',`Halo, ${esc(S.nama)}. Ringkasan program magang saat ini.`)+
-    `<div class="grid">${stat(P.length,'Total peserta')}${stat(ak.length,'Sedang magang','hi')}${stat(P.length-ak.length,'Sudah selesai')}${stat(wait,'Logbook perlu ditinjau')}</div>
+    `<div class="grid">${stat(P.length,'Total peserta')}${stat(ak.length,'Sedang magang','hi')}${stat(P.length-ak.length,'Sudah selesai')}${stat(wait,'Logbook perlu ditinjau')}${stat(D.PJ.filter(x=>x.Status===(isAdmin()?'Diajukan':'Menunggu Pembimbing')).length,'Pengajuan perlu ditinjau')}</div>
     <div class="panel"><h3>Peserta yang sedang magang</h3><div class="tw"><table><tr><th>Nama</th><th>Divisi</th><th>Berakhir</th><th>Progres</th></tr>
     ${ak.map(p=>`<tr><td>${esc(p.Nama)}<small>${esc(p.Instansi)}</small></td><td>${esc(p.Divisi)}</td><td>${fmt(p.Selesai)}</td><td>${bar(p)}</td></tr>`).join('')||'<tr><td colspan=4 class="empty">Belum ada peserta aktif.</td></tr>'}</table></div></div>`}
   const p=D.P[0];if(!p)return '<p class="empty">Data peserta tidak ditemukan.</p>';
@@ -223,6 +228,17 @@ dash(){
   (p.Status==='Selesai'?`<div class="banner"><div><b>Selamat, magang Anda dinyatakan selesai.</b><br>Sertifikat sudah tersedia.</div><button class="btn amber" onclick="go('cert')">Buka sertifikat</button></div>`:'')+
   `<div class="grid">${stat(pct(p)+'%','Progres magang','hi')}${stat(D.A.length,'Hari hadir')}${stat(ok+'/'+D.L.length,'Logbook disetujui')}${stat(badge(p.Status),'Status')}</div>
   <div class="panel"><h3>Program Anda</h3><div class="two" style="margin-top:10px"><p><span class="s">Divisi</span>${esc(p.Divisi)}</p><p><span class="s">Pembimbing</span>${esc(p.Pembimbing)}</p><p><span class="s">Mulai</span>${fmt(p.Mulai)}</p><p><span class="s">Selesai</span>${fmt(p.Selesai)}</p></div></div>`},
+
+pj(){
+  const st={Diajukan:'Aktif','Menunggu Pembimbing':'Menunggu',Diterima:'ok',Ditolak:'off'},ord={Diajukan:0,'Menunggu Pembimbing':1,Diterima:2,Ditolak:3};
+  const L=[...D.PJ].sort((a,b)=>ord[a.Status]-ord[b.Status]);
+  return head('Pengajuan magang',isAdmin()?'Tinjau pengajuan, tentukan pembimbing, lalu teruskan. Setelah pembimbing menerima, peserta otomatis terdata dan akunnya dibuat.':'Pengajuan yang ditujukan kepada Anda.')+
+  `<div class="row"><input placeholder="Cari nama, instansi, status..." oninput="fq(this.value)"><span class="s">${C.bukaPendaftaran==='1'?'Pendaftaran dibuka':'Pendaftaran ditutup'}</span></div>
+  <div class="panel"><div class="tw"><table><tr><th>Pemohon</th><th>Periode / divisi</th><th>Berkas</th><th>Status</th><th></th></tr>
+  ${L.map(r=>`<tr data-s="${esc((r.Nama+r.Instansi+r.Status+r.ID+r.Divisi).toLowerCase())}"><td><b>${esc(r.Nama)}</b><small>${esc(r.Instansi)} - ${esc(r.Jurusan)}</small><small>${esc(r.Email)} / ${esc(r.HP)}</small><small>${esc(r.ID)} - ${fmt(r.Tgl)}</small></td>
+  <td>${fmt(r.Mulai)}<small>s.d. ${fmt(r.Selesai)}</small><small>${esc(r.Divisi)||'-'}${r.Pembimbing?' / '+esc(r.Pembimbing):''}</small></td><td>${lamp(r.Berkas)||'-'}</td>
+  <td>${badge(r.Status,st[r.Status])}${r.PesertaID?`<small>${esc(r.PesertaID)}</small>`:''}</td>
+  <td><button class="btn ${(isAdmin()&&r.Status==='Diajukan')||r.Status==='Menunggu Pembimbing'?'':'ghost'} sm" onclick="openPJ('${r.ID}')">${(isAdmin()&&r.Status==='Diajukan')||r.Status==='Menunggu Pembimbing'?'Tinjau':'Detail'}</button></td></tr>`).join('')||'<tr><td colspan=5 class="empty">Belum ada pengajuan.</td></tr>'}</table></div></div>`},
 
 peserta(){
   return head('Data peserta','Pendataan, penilaian, dan penyelesaian magang.')+
@@ -288,6 +304,9 @@ set(){
   ${im('Gambar latar penuh (opsional)','bg','Landscape A4, mis. 2480 x 1754 px. Jika diisi, menggantikan desain bawaan template.')}
   ${f('Format nomor sertifikat','certNoFmt')}<p class="s" style="margin:-6px 0 12px">Gunakan {seq} urutan, {bln} bulan romawi, {thn} tahun.</p>
   <button type="button" class="btn ghost" onclick="prevCert()">Pratinjau sertifikat</button></div>
+  <div class="panel"><h3>Pendaftaran magang</h3><p class="hint">Form pengajuan di halaman login. Email pemberitahuan dikirim otomatis dari akun Google pemilik script.</p>
+  <div class="two"><label>Status pendaftaran<select name="bukaPendaftaran"><option value="1" ${C.bukaPendaftaran==='1'?'selected':''}>Dibuka</option><option value="0" ${C.bukaPendaftaran==='0'?'selected':''}>Ditutup</option></select></label>${f('Daftar divisi (pisahkan koma, boleh kosong)','divisiList')}</div>
+  ${f('Teks pengantar di form','infoDaftar')}${f('Alamat portal (untuk tautan di email)','portalUrl')}</div>
   <div class="panel"><h3>Penilaian dan akun</h3><p class="hint">Aspek nilai bebas diubah. Nilai akhir adalah rata-rata semua aspek.</p>
   ${f('Aspek penilaian (pisahkan koma)','aspek')}${f('Predikat (batas:nama, pisahkan koma)','predikat')}${f('Sandi awal akun baru / reset','passDefault')}</div>
   <button class="btn">Simpan pengaturan</button></form>`},
@@ -309,7 +328,51 @@ function fq(q){q=q.toLowerCase();document.querySelectorAll('tr[data-s]').forEach
 function xl(k){const m={peserta:()=>D.P.map(({_r,...r})=>r),abs:()=>D.A.map(a=>({Nama:nm(a.PesertaID),Tanggal:a.Tanggal,Masuk:a.Masuk,Pulang:a.Keluar})),log:()=>D.L.map(l=>({Nama:nm(l.PesertaID),Tanggal:l.Tanggal,Aktivitas:l.Aktivitas,Output:l.Output,Status:l.Status,Catatan:l.Catatan}))};
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(m[k]()),k);XLSX.writeFile(wb,`${k}_${todayStr()}.xlsx`)}
 function rs(file,max,type){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;const x=c.getContext('2d');if(type==='image/jpeg'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(i,0,0,c.width,c.height);res(c.toDataURL(type,.82))};i.src=r.result};r.readAsDataURL(file)})}
-async function viewF(id){try{const u=await asset(id);const w=window.open();w.document.write(`<img src="${u}" style="max-width:100%">`)}catch(x){toast(x.message)}}
+async function viewF(id){const w=window.open('');try{const u=await asset(id),b=await (await fetch(u)).blob();w.location=URL.createObjectURL(b)}catch(x){w.close();toast(x.message)}}
+
+/* ===== pengajuan magang ===== */
+function openApply(){
+  const dv=(C.divisiList||'').split(',').map(x=>x.trim()).filter(Boolean);
+  $('#dlg').innerHTML=`<h3>Pengajuan magang</h3><p class="s" style="margin:-8px 0 14px">${esc(C.infoDaftar)}</p><form onsubmit="saveApply(event)">
+  <div class="two">${F('Nama lengkap','Nama','','text','required')}${F('Instansi / sekolah / kampus','Instansi','','text','required')}${F('Jurusan','Jurusan')}${F('Email aktif','Email','','email','required')}${F('No. HP / WhatsApp','HP','','tel','required')}
+  ${dv.length?`<label>Divisi yang diminati<select name="Divisi">${dv.map(x=>`<option>${esc(x)}</option>`).join('')}</select></label>`:F('Divisi yang diminati','Divisi')}
+  ${F('Rencana mulai','Mulai','','date','required')}${F('Rencana selesai','Selesai','','date','required')}</div>
+  <label>Motivasi singkat<textarea name="Motivasi" rows="3" maxlength="1500"></textarea></label>
+  <label>Surat pengantar / CV (PDF atau gambar, maks. 2,5 MB)<input type="file" name="file" accept="image/*,application/pdf"></label>
+  <input name="web" style="display:none" tabindex="-1" autocomplete="off">
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Kirim pengajuan</button></div></form>`;$('#dlg').showModal()}
+function readF(f){return new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)})}
+async function saveApply(e){e.preventDefault();const o=obj(e.target),f=e.target.file.files[0];delete o.file;
+  try{if(f){if(f.size>2.5*1024*1024&&f.type==='application/pdf')throw new Error('PDF maksimal 2,5 MB');
+    o.Berkas=await api('ajukanUpload',{data:f.type==='application/pdf'?await readF(f):await rs(f,1600,'image/jpeg'),name:'berkas'})}
+    const r=await api('ajukan',{data:o});
+    $('#dlg').innerHTML=`<h3>Pengajuan terkirim</h3><div class="ok2"><p class="s">Kode pengajuan Anda</p><h2 style="letter-spacing:2px">${r.ID}</h2></div>
+    <p style="margin:14px 0">Simpan kode ini. Gunakan kode dan email Anda di menu <b>Cek status pengajuan</b> untuk melihat perkembangan. Jika diterima, username dan sandi awal tampil di sana.</p>
+    <div class="acts"><button class="btn" onclick="closeDlg()">Selesai</button></div>`}catch(x){toast(x.message)}}
+function openCek(){
+  $('#dlg').innerHTML=`<h3>Cek status pengajuan</h3><form onsubmit="cekPJ(event)">${F('Kode pengajuan','id','','text','required placeholder="PJ-XXXXXX"')}${F('Email','email','','email','required')}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Tutup</button><button class="btn">Cek</button></div></form><div id="cekr"></div>`;$('#dlg').showModal()}
+async function cekPJ(e){e.preventDefault();
+  try{const r=await api('cekPengajuan',obj(e.target)),m={Diajukan:'Pengajuan Anda sedang ditinjau admin.','Menunggu Pembimbing':'Disetujui admin. Menunggu persetujuan pembimbing.',Diterima:'Selamat, Anda diterima sebagai peserta magang.',Ditolak:'Mohon maaf, pengajuan belum dapat diterima.'};
+    $('#cekr').innerHTML=`<div class="ok2" style="margin-top:14px"><b>${esc(r.Nama)}</b> ${badge(r.Status,{Diajukan:'Aktif','Menunggu Pembimbing':'Menunggu',Diterima:'ok',Ditolak:'off'}[r.Status])}<p style="margin-top:8px">${m[r.Status]}</p>
+    ${r.Catatan?`<p class="s">Catatan: ${esc(r.Catatan)}</p>`:''}${r.Status==='Diterima'?`<p style="margin-top:10px">Divisi ${esc(r.Divisi)}, pembimbing ${esc(r.Pembimbing)}<br>Username: <b>${esc(r.Username)}</b><br>${r.SandiAwal?`Sandi awal: <b>${esc(r.SandiAwal)}</b><br><span class="s">Segera ganti sandi setelah masuk.</span>`:'<span class="s">Sandi sudah Anda ganti.</span>'}</p>`:''}</div>`}catch(x){toast(x.message)}}
+async function openPJ(id){
+  const r=D.PJ.find(x=>x.ID===id);let M=[];const dv=(C.divisiList||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const stage1=isAdmin()&&r.Status==='Diajukan',stage2=r.Status==='Menunggu Pembimbing'&&(isAdmin()||r.Pembimbing===S.nama);
+  if(stage1){try{M=await api('mentors')}catch(e){}}
+  $('#dlg').innerHTML=`<h3>${esc(r.Nama)} ${badge(r.Status,{Diajukan:'Aktif','Menunggu Pembimbing':'Menunggu',Diterima:'ok',Ditolak:'off'}[r.Status])}</h3>
+  <p class="s">${esc(r.Instansi)} - ${esc(r.Jurusan)}<br>${esc(r.Email)} / ${esc(r.HP)}<br>${fmt(r.Mulai)} s.d. ${fmt(r.Selesai)}</p>
+  <p style="margin:10px 0;white-space:pre-wrap">${esc(r.Motivasi)||'<span class="s">Tanpa motivasi.</span>'}</p>${lamp(r.Berkas)}
+  <form onsubmit="return false" style="margin-top:12px">
+  ${stage1?`<div class="two"><label>Divisi penempatan${dv.length?`<select name="divisi">${dv.map(x=>`<option ${x===r.Divisi?'selected':''}>${esc(x)}</option>`).join('')}</select>`:`<input name="divisi" value="${esc(r.Divisi)}">`}</label>
+  <label>Pembimbing<select name="pembimbing"><option value="">Pilih pembimbing</option>${M.map(m=>`<option>${esc(m)}</option>`).join('')}</select></label></div>`:''}
+  ${stage1||stage2?`<label>Catatan (opsional, dikirim ke pemohon jika ditolak)<input name="catatan"></label>`:r.Catatan?`<p class="s">Catatan: ${esc(r.Catatan)}</p>`:''}
+  ${r.Status==='Diterima'?`<p class="s">Terdata sebagai ${esc(r.PesertaID)}, akun ${esc(r.Username)}.</p>`:''}
+  <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Tutup</button>
+  ${stage1||stage2?`<button type="button" class="btn red" onclick="procPJ('${r.ID}','tolak',this.form,${stage1})">Tolak</button><button type="button" class="btn" onclick="procPJ('${r.ID}','setuju',this.form,${stage1})">${stage1?'Setujui dan teruskan':'Terima sebagai peserta'}</button>`:''}</div></form>`;$('#dlg').showModal()}
+async function procPJ(id,aksi,f,s1){
+  if(aksi==='tolak'&&!confirm('Tolak pengajuan ini?'))return;const o=obj(f);
+  try{await api(s1?'prosesAdmin':'prosesPembimbing',{id,aksi,...o});closeDlg();toast(aksi==='tolak'?'Pengajuan ditolak':s1?'Diteruskan ke pembimbing':'Peserta otomatis terdata dan akun dibuat');go('pj')}catch(x){toast(x.message)}}
 
 /* ===== peserta & penilaian ===== */
 async function openP(id){
