@@ -82,6 +82,9 @@ dialog.wide{width:min(1000px,96vw)}dialog::backdrop{background:#10243a99}
 dialog h3{margin-bottom:14px;font-size:18px}.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
 #toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,30px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+#lay .le{position:absolute;cursor:move;user-select:none;touch-action:none}
+#lay .le.sel{outline:2px dashed var(--teal);outline-offset:3px}
+#lay .le:hover{outline:1px dashed var(--teal2);outline-offset:3px}
 @media(max-width:860px){
  #login,#ver{grid-template-columns:1fr}.hero{padding:32px}.hero h1{font-size:28px}
  #app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
@@ -281,8 +284,8 @@ cert(){
 users(){
   return head('Akun pengguna','Kelola akun admin, pembimbing, dan peserta.')+
   `<div class="row"><span></span><button class="btn" onclick="openU()">Tambah akun</button></div>
-  <div class="panel"><div class="tw"><table><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Status</th><th></th></tr>
-  ${D.U.map(u=>`<tr><td>${esc(u.Username)}</td><td>${esc(u.Nama)}${u.PesertaID?`<small>${esc(u.PesertaID)}</small>`:''}</td><td>${esc(u.Role)}</td><td>${u.Aktif==='0'?badge('Nonaktif','off'):badge('Aktif','ok')}</td>
+  <div class="panel"><div class="tw"><table><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Email</th><th>Status</th><th></th></tr>
+  ${D.U.map(u=>`<tr><td>${esc(u.Username)}</td><td>${esc(u.Nama)}${u.PesertaID?`<small>${esc(u.PesertaID)}</small>`:''}</td><td>${esc(u.Role)}</td><td>${esc(u.Email)||'-'} <a class="clr" style="color:var(--teal)" onclick="ubahEmail('${esc(u.Username)}','${esc(u.Email)}')">ubah</a></td><td>${u.Aktif==='0'?badge('Nonaktif','off'):badge('Aktif','ok')}</td>
   <td style="white-space:nowrap"><button class="btn ghost sm" onclick="resetP('${esc(u.Username)}')">Reset sandi</button> ${u.Username===S.username?'':`<button class="btn ${u.Aktif==='0'?'':'red'} sm" onclick="tog('${esc(u.Username)}')">${u.Aktif==='0'?'Aktifkan':'Nonaktifkan'}</button>`}</td></tr>`).join('')}</table></div></div>`},
 
 set(){
@@ -296,12 +299,14 @@ set(){
   ${im('Logo perusahaan','logo','PNG transparan paling baik. Otomatis diperkecil.')}
   <div class="three">${f('Warna utama','cPrimary','color')}${f('Warna aksen','cAccent','color')}${f('Warna menu samping','cSide','color')}</div></div>
   <div class="panel"><h3>Desain sertifikat</h3><p class="hint">Teks isi bisa memakai: {nama} {instansi} {jurusan} {divisi} {pembimbing} {mulai} {selesai} {predikat} {nilai} {no}</p>
-  <div class="two"><label>Template<select name="certTpl">${[['klasik','Klasik (bingkai ganda)'],['modern','Modern (pita samping)'],['minimal','Minimal (serif)']].map(([v,l])=>`<option value="${v}" ${C.certTpl===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <div class="two"><label>Template<select name="certTpl">${[['klasik','Klasik (bingkai ganda)'],['modern','Modern (pita samping)'],['minimal','Minimal (serif)'],['kustom','Kustom (atur tata letak sendiri)']].map(([v,l])=>`<option value="${v}" ${C.certTpl===v?'selected':''}>${l}</option>`).join('')}</select></label>
   ${f('Judul','certTitle')}${f('Kalimat pembuka','certIntro')}<label>Tampilkan QR verifikasi<select name="certQR"><option value="1" ${C.certQR==='1'?'selected':''}>Ya</option><option value="0" ${C.certQR==='0'?'selected':''}>Tidak</option></select></label></div>
   <label>Teks isi<textarea name="certBody" rows="3">${esc(C.certBody)}</textarea></label>
   <div class="two">${f('Nama penandatangan','signName')}${f('Jabatan penandatangan','signTitle')}</div>
   ${im('Tanda tangan (gambar)','ttd','PNG transparan, tanda tangan di atas nama.')}
   ${im('Gambar latar penuh (opsional)','bg','Landscape A4, mis. 2480 x 1754 px. Jika diisi, menggantikan desain bawaan template.')}
+  <input type="hidden" name="certLayout" value="${esc(C.certLayout)}">
+  <div class="ok2" style="margin:4px 0 14px"><b>Pakai desain sendiri?</b><p class="s" style="margin:4px 0 10px">Unggah gambar latar di atas, lalu atur posisi nama peserta, logo, tanda tangan, QR, dan semua teks persis sesuai desain Anda. Template otomatis berubah menjadi Kustom.</p><button type="button" class="btn amber" onclick="openLayout()">Atur tata letak sertifikat</button></div>
   ${f('Format nomor sertifikat','certNoFmt')}<p class="s" style="margin:-6px 0 12px">Gunakan {seq} urutan, {bln} bulan romawi, {thn} tahun.</p>
   <button type="button" class="btn ghost" onclick="prevCert()">Pratinjau sertifikat</button></div>
   <div class="panel"><h3>Pendaftaran magang</h3><p class="hint">Form pengajuan di halaman login. Email pemberitahuan dikirim otomatis dari akun Google pemilik script.</p>
@@ -422,9 +427,10 @@ function openU(){
   $('#dlg').innerHTML=`<h3>Tambah akun</h3><form onsubmit="saveU(event)"><div class="two">${F('Username','Username','','text','required')}${F('Nama','Nama','','text','required')}
   <label>Peran<select name="Role"><option value="mentor">Pembimbing</option><option value="admin">Admin</option><option value="peserta">Peserta</option></select></label>
   <label>Untuk peserta (jika peran Peserta)<select name="PesertaID"><option value="">-</option>${D.P.map(p=>`<option value="${p.ID}">${esc(p.Nama)}</option>`).join('')}</select></label></div>
-  ${F('Kata sandi (kosongkan = sandi awal)','Password')}
+  ${F('Email (untuk notifikasi pengajuan)','Email','','email')}${F('Kata sandi (kosongkan = sandi awal)','Password')}
   <div class="acts"><button type="button" class="btn ghost" onclick="closeDlg()">Batal</button><button class="btn">Simpan</button></div></form>`;$('#dlg').showModal()}
 async function saveU(e){e.preventDefault();try{await api('saveUser',{data:obj(e.target)});closeDlg();toast('Akun dibuat');go('users')}catch(x){toast(x.message)}}
+async function ubahEmail(u,old){const e=prompt('Email untuk '+u+' (kosongkan untuk menghapus)',old||'');if(e===null)return;try{await api('saveUserEmail',{username:u,email:e});toast('Email diperbarui');go('users')}catch(x){toast(x.message)}}
 async function tog(u){try{await api('toggleUser',{username:u});go('users')}catch(x){toast(x.message)}}
 async function resetP(u){if(!confirm('Reset sandi '+u+' ke sandi awal?'))return;try{toast('Sandi diatur ke: '+await api('resetPass',{username:u}))}catch(x){toast(x.message)}}
 
@@ -436,8 +442,65 @@ async function upImg(inp,k){const f=inp.files[0];if(!f)return;toast('Mengunggah.
 function clrImg(k){document.querySelector(`#sf [name=${k}]`).value='';$('#pv_'+k).innerHTML=''}
 async function saveSet(e){e.preventDefault();try{await api('saveConfig',{data:obj(e.target)});C=await api('config');await theme();toast('Pengaturan tersimpan')}catch(x){toast(x.message)}}
 async function prevCert(){
-  const cf={...C,...obj($('#sf'))},p={Nama:'Nama Peserta Contoh',Instansi:'Universitas Contoh',Jurusan:'Teknik Industri',Divisi:'Operasional',Pembimbing:'Pembimbing Contoh',Mulai:'2026-01-05',Selesai:'2026-04-05',NilaiAkhir:'88',NoSertifikat:'001/SERT-PKL/XI/2026',TglSertifikat:todayStr()};
-  try{const d=await mkCert(p,cf);$('#dlg').className='wide';$('#dlg').innerHTML=`<h3>Pratinjau sertifikat</h3><iframe src="${d.output('bloburl')}" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px"></iframe><div class="acts" style="margin-top:12px"><button class="btn" onclick="closeDlg()">Tutup</button></div>`;$('#dlg').showModal()}catch(x){toast(x.message)}}
+  const cf={...C,...obj($('#sf'))};
+  try{const d=await mkCert(SAMPLE,cf);$('#dlg').className='wide';$('#dlg').innerHTML=`<h3>Pratinjau sertifikat</h3><iframe src="${d.output('bloburl')}" style="width:100%;height:60vh;border:1px solid var(--line);border-radius:10px"></iframe><div class="acts" style="margin-top:12px"><button class="btn" onclick="closeDlg()">Tutup</button></div>`;$('#dlg').showModal()}catch(x){toast(x.message)}}
+
+/* ===== editor tata letak sertifikat ===== */
+const SAMPLE={Nama:'Nama Peserta Contoh',Instansi:'Universitas Contoh',Jurusan:'Teknik Industri',Divisi:'Operasional',Pembimbing:'Pembimbing Contoh',Mulai:'2026-01-05',Selesai:'2026-04-05',NilaiAkhir:'88',NoSertifikat:'001/SERT-PKL/XI/2026',TglSertifikat:todayStr()};
+const LBL={logo:'Logo',org:'Nama perusahaan',title:'Judul',no:'Nomor sertifikat',intro:'Kalimat pembuka',nama:'Nama peserta',instansi:'Instansi dan jurusan',isi:'Teks isi',kota:'Kota dan tanggal',ttd:'Gambar tanda tangan',garis:'Garis tanda tangan',signName:'Nama penandatangan',signTitle:'Jabatan penandatangan',qr:'QR verifikasi'};
+const DEFLAY=()=>({font:'helvetica',logo:{x:123.5,y:12,w:50,h:17},org:{x:148.5,y:42,s:12,a:'c',c:'#0f766e',b:1},title:{x:148.5,y:64,s:42,a:'c',c:'#10243a',b:1},no:{x:148.5,y:73,s:11,a:'c',c:'#64748b',b:0},intro:{x:148.5,y:90,s:13,a:'c',c:'#10243a',b:0},nama:{x:148.5,y:108,s:28,a:'c',c:'#0f766e',b:1},instansi:{x:148.5,y:119,s:12,a:'c',c:'#10243a',b:0},isi:{x:148.5,y:130,s:12,a:'c',c:'#10243a',b:0,w:215},kota:{x:148.5,y:150,s:11,a:'c',c:'#10243a',b:0},ttd:{x:126,y:153,w:45,h:20},garis:{x:113.5,y:176,w:70,c:'#10243a'},signName:{x:148.5,y:182,s:12,a:'c',c:'#10243a',b:1},signTitle:{x:148.5,y:187,s:10,a:'c',c:'#64748b',b:0},qr:{x:259,y:160,w:24}});
+const layoutOf=cf=>{const d=DEFLAY();try{const u=JSON.parse(cf.certLayout||'{}');if(u.font)d.font=u.font;Object.keys(d).forEach(k=>{if(k!=='font'&&u[k])Object.assign(d[k],u[k])})}catch(e){}return d};
+const isTxt=k=>!['logo','ttd','garis','qr'].includes(k);
+function certTxt(p,cf){
+  const v={nama:p.Nama,instansi:p.Instansi,jurusan:p.Jurusan,divisi:p.Divisi,pembimbing:p.Pembimbing,mulai:fmt(p.Mulai),selesai:fmt(p.Selesai),predikat:pred(+p.NilaiAkhir),nilai:p.NilaiAkhir,no:p.NoSertifikat};
+  const fill=s=>String(s||'').replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:m);
+  return{org:String(cf.org||'').toUpperCase(),title:cf.certTitle,no:'Nomor: '+p.NoSertifikat,intro:cf.certIntro,nama:p.Nama,instansi:`${p.Instansi}${p.Jurusan?' - '+p.Jurusan:''}`,isi:fill(cf.certBody),kota:`${cf.kota}, ${fmt(p.TglSertifikat)}`,signName:cf.signName,signTitle:cf.signTitle}}
+let LAY=null,LSEL='nama',LIM={};const SC=2.1,MM=.3528,FAM={helvetica:'Helvetica,Arial,sans-serif',times:'"Times New Roman",Times,serif',courier:'"Courier New",monospace'};
+async function openLayout(){
+  const cf={...C,...obj($('#sf'))};LAY=layoutOf(cf);LSEL='nama';
+  const [a,b,c]=await Promise.all([cf.logo,cf.ttd,cf.bg].map(x=>x?asset(x).catch(()=>''):''));LIM={logo:a,ttd:b,bg:c,cf};
+  $('#dlg').className='wide';
+  $('#dlg').innerHTML=`<h3>Atur tata letak sertifikat</h3><p class="s" style="margin:-8px 0 12px">Seret elemen di kanvas untuk memindahkan. Klik elemen untuk mengubah ukuran, warna, dan perataan. Satuan milimeter pada kertas A4 landscape (297 x 210). Tampilan kanvas hanya perkiraan, cek hasil akhirnya lewat Pratinjau PDF.</p>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div style="max-width:100%;overflow:auto"><div id="lay"></div></div><div id="lpn" style="flex:1;min-width:250px"></div></div>
+  <div class="acts" style="margin-top:14px"><button type="button" class="btn red" onclick="layReset()" style="margin-right:auto">Kembalikan bawaan</button><button type="button" class="btn ghost" onclick="closeDlg()">Tutup</button><button type="button" class="btn ghost" onclick="layPrev()">Pratinjau PDF</button><button type="button" class="btn" onclick="laySave()">Simpan tata letak</button></div>`;
+  $('#dlg').showModal();layPaint();layPanel()}
+function layStyle(k){const e=LAY[k];
+  if(k==='garis')return`left:${e.x*SC}px;top:${e.y*SC}px;width:${e.w*SC}px;height:0;border-top:2px solid ${e.c}`;
+  if(!isTxt(k))return`left:${e.x*SC}px;top:${e.y*SC}px;width:${e.w*SC}px;height:${(k==='qr'?e.w:e.h)*SC}px`;
+  const fs=e.s*MM*SC,isi=k==='isi',lh=isi?1.5:1.2,top=e.y*SC-fs*(lh/2+.3465),
+  left=isi?(e.a==='c'?e.x-e.w/2:e.a==='r'?e.x-e.w:e.x)*SC:e.x*SC,
+  geo=isi?`width:${e.w*SC}px;white-space:pre-wrap;`:`white-space:pre;transform:translateX(${e.a==='c'?'-50%':e.a==='r'?'-100%':'0'});`;
+  return`left:${left}px;top:${top}px;${geo}line-height:${lh};font-size:${fs}px;font-weight:${e.b?700:400};color:${e.c};text-align:${{l:'left',c:'center',r:'right'}[e.a]};font-family:${FAM[LAY.font]||FAM.helvetica}`}
+function layInner(k,X){
+  if(isTxt(k))return esc(X[k]);if(k==='garis')return'';
+  if(k==='qr')return'<div style="width:100%;height:100%;background:repeating-conic-gradient(#10243a 0 25%,#fff 0 50%) 0 0/10px 10px;border:2px solid #10243a"></div>';
+  return LIM[k]?`<img src="${LIM[k]}" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:`<div style="width:100%;height:100%;border:2px dashed #94a3b8;display:grid;place-items:center;font-size:11px;color:#64748b">${LBL[k]} (belum diunggah)</div>`}
+function layPaint(){const c=$('#lay'),X=certTxt(SAMPLE,LIM.cf);
+  c.style.cssText=`position:relative;width:${297*SC}px;height:${210*SC}px;background:#fff ${LIM.bg?`url(${LIM.bg}) center/100% 100%`:''};border:1px solid var(--line);overflow:hidden;touch-action:none;box-shadow:0 2px 12px #0002`;
+  c.innerHTML=Object.keys(LAY).filter(k=>k!=='font'&&LAY[k].on!==0).map(k=>`<div class="le ${k===LSEL?'sel':''}" data-k="${k}" style="${layStyle(k)}">${layInner(k,X)}</div>`).join('');
+  c.onpointerdown=layDown}
+function layDown(ev){const t=ev.target.closest('.le');if(!t)return;const k=t.dataset.k;ev.preventDefault();
+  if(LSEL!==k){LSEL=k;layPanel();document.querySelectorAll('#lay .le').forEach(n=>n.classList.toggle('sel',n.dataset.k===k))}
+  const e=LAY[k],sx=ev.clientX,sy=ev.clientY,ox=e.x,oy=e.y;t.setPointerCapture(ev.pointerId);
+  t.onpointermove=m=>{e.x=Math.max(0,Math.min(297,Math.round((ox+(m.clientX-sx)/SC)*2)/2));e.y=Math.max(0,Math.min(210,Math.round((oy+(m.clientY-sy)/SC)*2)/2));t.style.cssText=layStyle(k);
+    if($('#lf_x'))$('#lf_x').value=e.x;if($('#lf_y'))$('#lf_y').value=e.y};
+  t.onpointerup=()=>{t.onpointermove=null}}
+function layPanel(){const k=LSEL,e=LAY[k],t=isTxt(k);
+  const n=(f,l,st=.5,mn=0,mx=300)=>`<label>${l}<input type="number" id="lf_${f}" step="${st}" min="${mn}" max="${mx}" value="${e[f]}" oninput="layF('${f}',this.value)"></label>`;
+  const chk=(f,l,on)=>`<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto;margin:0" ${on?'checked':''} onchange="layF('${f}',this.checked?1:0,1)"> ${l}</label>`;
+  $('#lpn').innerHTML=`<label>Elemen<select onchange="LSEL=this.value;layPaint();layPanel()">${Object.keys(LBL).map(x=>`<option value="${x}" ${x===k?'selected':''}>${LBL[x]}${LAY[x].on===0?' (disembunyikan)':''}</option>`).join('')}</select></label>
+  ${chk('on','Tampilkan elemen ini',e.on!==0)}
+  <div class="two" style="margin-top:12px">${n('x','Posisi X (mm)')}${n('y','Posisi Y (mm)')}</div>
+  ${t?`<div class="two">${n('s','Ukuran huruf (pt)',1,4,120)}<label>Rata<select onchange="layF('a',this.value)">${[['l','Kiri'],['c','Tengah'],['r','Kanan']].map(([v,l])=>`<option value="${v}" ${e.a===v?'selected':''}>${l}</option>`).join('')}</select></label></div>
+  <div class="two"><label>Warna<input type="color" value="${e.c}" oninput="layF('c',this.value)"></label><div style="margin-top:26px">${chk('b','Tebal',e.b)}</div></div>${k==='isi'?n('w','Lebar blok teks (mm)',1,20,297):''}`
+  :k==='garis'?`<div class="two">${n('w','Panjang (mm)',1,5,297)}<label>Warna<input type="color" value="${e.c}" oninput="layF('c',this.value)"></label></div>`
+  :k==='qr'?n('w','Ukuran (mm)',1,10,80):`<div class="two">${n('w','Lebar (mm)',1,5,200)}${n('h','Tinggi (mm)',1,5,200)}</div>`}
+  <p class="s" style="margin:6px 0 12px">Titik X dan Y adalah ${t?'titik acuan teks (sesuai perataan)':'sudut kiri atas elemen'}.</p>
+  <label>Jenis huruf (semua teks)<select onchange="LAY.font=this.value;layPaint()">${[['helvetica','Sans-serif (Helvetica)'],['times','Serif (Times)'],['courier','Monospace (Courier)']].map(([v,l])=>`<option value="${v}" ${LAY.font===v?'selected':''}>${l}</option>`).join('')}</select></label>`}
+function layF(f,v,re){const e=LAY[LSEL];e[f]=(f==='a'||f==='c')?v:(+v||0);layPaint();if(re)layPanel()}
+function layReset(){if(!confirm('Kembalikan semua elemen ke posisi bawaan?'))return;LAY=DEFLAY();layPaint();layPanel()}
+async function layPrev(){const w=window.open('');try{const d=await mkCert(SAMPLE,{...LIM.cf,certTpl:'kustom',certLayout:JSON.stringify(LAY)});w.location=d.output('bloburl')}catch(x){w.close();toast(x.message)}}
+async function laySave(){try{const j=JSON.stringify(LAY);await api('saveConfig',{data:{certLayout:j,certTpl:'kustom'}});C.certLayout=j;C.certTpl='kustom';const f=$('#sf');f.certLayout.value=j;f.certTpl.value='kustom';closeDlg();toast('Tata letak tersimpan, template Kustom aktif')}catch(x){toast(x.message)}}
 
 /* ===== migrasi data ===== */
 async function expAll(){try{const o=await api('exportAll'),wb=XLSX.utils.book_new();Object.keys(o).forEach(n=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(o[n]),n));XLSX.writeFile(wb,`Cadangan_Portal_Magang_${todayStr()}.xlsx`)}catch(x){toast(x.message)}}
@@ -456,22 +519,35 @@ async function mkCert(p,cf){
   const mod=T==='modern',X=mod?66:W/2,al=mod?'left':'center',font=T==='minimal'?'times':'helvetica',bgOn=!!bg;
   const tx=(t,y,s,st='normal',col=I)=>{d.setFont(font,st);d.setFontSize(s);d.setTextColor(...col);d.text(t,X,y,{align:al})};
   const put=(im,x,y,mw,mh,fm)=>{const q=d.getImageProperties(im),k=Math.min(mw/q.width,mh/q.height);d.addImage(im,q.fileType,x-(fm==='c'?q.width*k/2:0),y,q.width*k,q.height*k)};
-  const v={nama:p.Nama,instansi:p.Instansi,jurusan:p.Jurusan,divisi:p.Divisi,pembimbing:p.Pembimbing,mulai:fmt(p.Mulai),selesai:fmt(p.Selesai),predikat:pred(+p.NilaiAkhir),nilai:p.NilaiAkhir,no:p.NoSertifikat};
-  const fill=s=>String(s||'').replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:m);
+  const X_=certTxt(p,cf);
+  const fit=(im,x,y,w,h)=>{const q=d.getImageProperties(im),k=Math.min(w/q.width,h/q.height),iw=q.width*k,ih=q.height*k;d.addImage(im,q.fileType,x+(w-iw)/2,y+(h-ih)/2,iw,ih)};
+  const qrDraw=(x,y,sz)=>{const q=qrcode(0,'M');q.addData(location.origin+location.pathname+'?v='+encodeURIComponent(p.NoSertifikat));q.make();const n=q.getModuleCount(),s=sz/n;d.setFillColor(...I);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d.rect(x+c*s,y+r*s,s+.05,s+.05,'F')};
+  if(T==='kustom'){
+    const L=layoutOf(cf),fn=L.font||'helvetica',AL={l:'left',c:'center',r:'right'};
+    if(bg)d.addImage(bg,'JPEG',0,0,W,Ht);
+    Object.keys(L).forEach(k=>{const e=L[k];if(k==='font'||e.on===0)return;
+      if(k==='logo'){if(logo)fit(logo,e.x,e.y,e.w,e.h)}
+      else if(k==='ttd'){if(ttd)fit(ttd,e.x,e.y,e.w,e.h)}
+      else if(k==='garis'){d.setDrawColor(...rgb(e.c));d.setLineWidth(.3);d.line(e.x,e.y,e.x+e.w,e.y)}
+      else if(k==='qr'){if(cf.certQR==='1'&&p.NoSertifikat){qrDraw(e.x,e.y,e.w);d.setFont(fn,'normal');d.setFontSize(7);d.setTextColor(...M);d.text('Pindai untuk verifikasi',e.x+e.w/2,e.y+e.w+4,{align:'center'})}}
+      else{d.setFont(fn,e.b?'bold':'normal');d.setFontSize(e.s);d.setTextColor(...rgb(e.c));
+        if(k==='isi'){let yy=e.y;String(X_.isi).split('\n').forEach(l=>d.splitTextToSize(l,e.w).forEach(t=>{d.text(t,e.x,yy,{align:AL[e.a]});yy+=e.s*.3528*1.5}))}
+        else d.text(String(X_[k]||''),e.x,e.y,{align:AL[e.a]})}});
+    return d}
   if(bgOn)d.addImage(bg,'JPEG',0,0,W,Ht);
   else if(T==='klasik'){d.setFillColor(...P);d.rect(0,0,W,Ht,'F');d.setFillColor(255,255,255);d.rect(8,8,W-16,Ht-16,'F');d.setDrawColor(...A);d.setLineWidth(1.2);d.rect(14,14,W-28,Ht-28);d.setDrawColor(...P);d.setLineWidth(.3);d.rect(17,17,W-34,Ht-34)}
   else if(mod){d.setFillColor(...P);d.rect(0,0,52,Ht,'F');d.setFillColor(...A);d.rect(52,0,3,Ht,'F')}
   else{d.setDrawColor(...P);d.setLineWidth(.5);d.rect(12,12,W-24,Ht-24)}
   if(logo)mod?put(logo,8,14,36,30):put(logo,W/2,19,50,17,'c');
   const y0=mod?42:48;
-  tx(fill(cf.org).toUpperCase(),y0-4,12,'bold',P);
+  tx(X_.org,y0-4,12,'bold',P);
   tx(cf.certTitle,y0+20,mod?38:42,'bold');
   tx('Nomor: '+p.NoSertifikat,y0+30,11,'normal',M);
   tx(cf.certIntro,y0+46,13);
   tx(p.Nama,y0+64,28,'bold',P);
   d.setDrawColor(...A);d.setLineWidth(.8);mod?d.line(X,y0+69,X+110,y0+69):d.line(75,y0+69,W-75,y0+69);
   tx(`${p.Instansi}${p.Jurusan?' - '+p.Jurusan:''}`,y0+79,12);
-  let yy=y0+90;fill(cf.certBody).split('\n').forEach(l=>d.splitTextToSize(l,mod?205:215).forEach(s=>{tx(s,yy,12);yy+=6.5}));
+  let yy=y0+90;String(X_.isi).split('\n').forEach(l=>d.splitTextToSize(l,mod?205:215).forEach(s=>{tx(s,yy,12);yy+=6.5}));
   tx(`${cf.kota}, ${fmt(p.TglSertifikat)}`,Math.max(yy+8,150),11);
   const sy=170,sx=mod?X+30:W/2;
   if(ttd)put(ttd,sx,sy-22,45,20,'c');
